@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>vNOMT-Sheinbugs</title>
+    <script src="https://unpkg.com/jspsych@7.2.1"></script>
+    <link href="https://unpkg.com/jspsych@7.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@jspsych/plugin-browser-check@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.0.0"></script>
+    <script src="./trials.js"></script>
+</head>
+
+<body></body>
+<script>
+    sameKey = 'g'
+    diffKey = 'h'
+    ITI = 500
+    fixTime = 500
+    img1TimeLong = 300
+    img1TimeShort = 150
+    maskTime = 500
+    responseTime = 3000
+
+    let chainLink = '' // Change this if you want to link to another experiment/site
+    let maxAttentionFails = 1
+
+    let knockedOut = false
+    var jsPsych = initJsPsych({
+        on_finish: function () {
+            if (!chainLink == '' && !knockedOut) {
+                window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study
+            }
+        }
+    });
+
+    let study = jsPsych.data.getURLVariable('study')
+    if (study === undefined) {
+        study = 'unknown'
+    }
+
+    // Make id
+    let sbjID = jsPsych.data.getURLVariable('id');
+    if (sbjID === undefined) {
+        sbjID = Date.now()
+    }
+
+    // Get attention check counter
+    let attentionFails = Number(jsPsych.data.getURLVariable('attn'))
+    if (isNaN(attentionFails)) {
+        attentionFails = 0
+    }
+
+    // Get source of participant
+    let source = jsPsych.data.getURLVariable('src')
+    if (source === undefined) {
+        source = 'unknown'
+    }
+
+    // Timeline
+    var timeline = [];
+
+    timeline.push({
+        type: jsPsychBrowserCheck,
+        inclusion_function: (data) => {
+            return !data.mobile
+        },
+        exclusion_message: (data) => {
+            return `
+            <p>You must use a desktop/laptop computer to participate in this 
+            experiment.</p>
+            <p>Please restart the experiment on a desktop/laptop computer.</p>
+        `;
+        }
+    })
+
+    // Preload
+    timeline.push({
+        type: jsPsychPreload,
+        auto_preload: true
+    })
+
+
+    timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/'+'instruct1.jpg',
+        choices: [' ']
+    })
+
+    timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/'+'instruct2.jpg',
+        choices: [' ']
+    })
+
+    timeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+        <p>Now you will complete a short practice block to familiarize you with the task.</p>
+        <p>Press <b>${sameKey}</b> for if the two objects are the SAME IDENTITY.</p>
+        <p>Press <b>${diffKey}</b> if the two objects are a DIFFERENT IDENTITY.</p>
+        <p>Try to respond as QUICKLY and ACCURATELY as possible.</p>
+        <p>Press the spacebar to start the practice block.</p>
+        `,
+        choices: [' '],
+        post_trial_gap: ITI
+    })
+
+    const mask = {
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/mask_Ziggerin.jpg',
+        trial_duration: maskTime,
+        stimulus_height: 125,
+        choices: 'NO_KEYS'
+    }
+
+    const fix = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: '<h1>+</h1>',
+        trial_duration: fixTime,
+        choices: 'NO_KEYS'
+    }
+
+    for (let trial of pracTrials) {
+        // Fixation
+        timeline.push(fix)
+
+        // Image 1
+        timeline.push({
+            type: jsPsychImageKeyboardResponse,
+            stimulus: './stimuli/' + trial.Img1,
+            stimulus_height: 125,
+            trial_duration: img1TimeLong,
+            choices: 'NO_KEYS'
+        })
+
+        // Mask
+        timeline.push(mask)
+
+        // Image 2
+        timeline.push({
+            type: jsPsychImageKeyboardResponse,
+            stimulus: './stimuli/' + trial.Img2,
+            stimulus_height: trial.Size == 'same' ? 125 : 95,
+            trial_duration: responseTime,
+            choices: [sameKey, diffKey],
+            post_trial_gap: ITI
+        })
+    }
+
+    timeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+        <p>You have finished the practice block.</p>
+        <p>Press the spacebar to start the experiment.</p>
+        `,
+        choices: [' '],
+        post_trial_gap: ITI
+    })
+
+
+    for (let trial of trials) {
+        if (trial.Trial == 62) {
+            // Break
+            timeline.push({
+                type: jsPsychHtmlKeyboardResponse,
+                stimulus: `
+            <p>You are halfway through this task!</p>
+            <p>Take a break.</p>
+            <p>Press the spacebar when you are ready to continue.</p>
+        `,
+                choices: [' '],
+                post_trial_gap: ITI
+            })
+        } else if (trial.Trial == 80) { // Attention check
+            // Fixation
+            timeline.push(fix)
+
+            // Image 1
+            timeline.push({
+                type: jsPsychImageKeyboardResponse,
+                stimulus: './stimuli/attentionCheck.jpg',
+                stimulus_height: 125,
+                trial_duration: img1TimeLong,
+                choices: 'NO_KEYS'
+            })
+
+            // Mask
+            timeline.push(mask)
+
+            // Image 2
+            timeline.push({
+                type: jsPsychImageKeyboardResponse,
+                stimulus: './stimuli/nz1_10_a.jpg',
+                stimulus_height: trial.Size == 'same' ? 125 : 95,
+                trial_duration: responseTime,
+                choices: [sameKey, diffKey],
+                post_trial_gap: ITI,
+                data: { attentionTrial: true },
+                on_finish: function (data) {
+                    data.success = jsPsych.pluginAPI.compareKeys(data.response, diffKey)
+                    attentionFails += data.success ? 0 : 1
+                    if (attentionFails > maxAttentionFails && source == 'prolific') {
+                        // Knock out prolific participants
+                        knockedOut = true
+                        jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                        //window.location = "https://andrexia.com"
+                    }
+                }
+            })
+
+        }
+
+        // Fixation
+        timeline.push(fix)
+
+        // Image 1
+        timeline.push({
+            type: jsPsychImageKeyboardResponse,
+            stimulus: './stimuli/' + trial.Img1,
+            stimulus_height: 125,
+            trial_duration: trial.Duration == 'long' ? img1TimeLong : img1TimeShort,
+            choices: 'NO_KEYS'
+        })
+
+        // Mask
+        timeline.push(mask)
+
+        // Image 2
+        timeline.push({
+            type: jsPsychImageKeyboardResponse,
+            stimulus: './stimuli/' + trial.Img2,
+            stimulus_height: trial.Size == 'same' ? 125 : 95,
+            trial_duration: responseTime,
+            choices: [sameKey, diffKey],
+            post_trial_gap: ITI,
+            data: {
+                testTrial: true,
+                SbjID: sbjID,
+                Category: trial.Category,
+                Trial: trial.Trial,
+                CorrRes: trial.CorrRes,
+                View: trial.View,
+                Size: trial.Size,
+                Img1: trial.Img1,
+                Img2: trial.Img2,
+                Duration: trial.Duration
+            },
+            on_finish: function (data) {
+                data.Corr = jsPsych.pluginAPI.compareKeys(data.response, data.CorrRes == '1' ? sameKey : diffKey)
+                data.AttentionFails = attentionFails
+            }
+        })
+    }
+
+    // End card
+    timeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+    <p>You have finished this task</p>
+    <p>Press any buttton to continue.</p>
+    `
+    });
+
+    // Run
+    jsPsych.run(timeline);
+</script>
+
+</html>
