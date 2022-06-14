@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>vNOMT-Sheinbugs</title>
+  <script src="https://unpkg.com/jspsych@7.2.1"></script>
+  <link href="https://unpkg.com/jspsych@7.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <script src="https://unpkg.com/@jspsych/plugin-browser-check@1.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.0.0"></script>
+  <script src="./trials.js"></script>
+</head>
+
+<body></body>
+<script>
+  keys = ['g', 'h', 'j']
+  ITI = 500
+
+  let chainLink = '' // Add link here if you want to link to another experiment/site at finish
+  let maxAttentionFails = 1
+
+  let knockedOut = false
+  var jsPsych = initJsPsych({
+    on_finish: function () {
+      if (!chainLink == '' && !knockedOut) {
+        window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study
+      }
+    }
+  });
+
+  let study = jsPsych.data.getURLVariable('study')
+  if (study === undefined) {
+    study = 'unknown'
+  }
+
+  // Make id
+  let sbjID = jsPsych.data.getURLVariable('id');
+  if (sbjID === undefined) {
+    sbjID = Date.now()
+  }
+
+  // Get attention check counter
+  let attentionFails = Number(jsPsych.data.getURLVariable('attn'))
+  if (isNaN(attentionFails)) {
+    attentionFails = 0
+  }
+
+  // Get source of participant
+  let source = jsPsych.data.getURLVariable('src')
+  if (source === undefined) {
+    source = 'unknown'
+  }
+
+  // Timeline
+  var timeline = [];
+
+  timeline.push({
+    type: jsPsychBrowserCheck,
+    inclusion_function: (data) => {
+      return !data.mobile
+    },
+    exclusion_message: (data) => {
+      return `
+          <p>You must use a desktop/laptop computer to participate in this 
+          experiment.</p>
+          <p>Please restart the experiment on a desktop/laptop computer.</p>
+        `;
+    }
+  })
+
+  // Preload
+  timeline.push({
+    type: jsPsychPreload,
+    auto_preload: true
+  })
+
+  timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+        <p>In this task you will learn to recognize six new examples from a category.</p>
+        <p>First you will study the six examples, and then there will be a test phase.</p>
+        <p>Press the spacebar to continue.</p>
+      `,
+    choices: [' '],
+    post_trial_gap: ITI
+  })
+
+  timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+        <p>In each test trial you will see 3 images: ONE of the studied images (target) + TWO distractors.</p>
+        <p>There will always be a target present, but sometimes it will be presented in visual noise.</p>
+        <p>Your task will be to select the target image from among the distractors.</p>
+        <p>Response keys will be presented below each image. Take your time, and be as ACCURATE as possible.</p>
+        <p>Press the spacebar to continue.</p>
+      `,
+    choices: [' '],
+    post_trial_gap: ITI
+  })
+
+  for (let trial of trials) {
+    if (trial.Trial == 1 || trial.Trial == 7) {
+      timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/Ziggerins_study1.jpg',
+        choices: [' '],
+        post_trial_gap: ITI
+      })
+    } else if (trial.Trial == 25) {
+      timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/diffview_instruct.jpg',
+        choices: [' '],
+        post_trial_gap: ITI
+      })
+
+      timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/Ziggerins_study2.jpg',
+        choices: [' '],
+        post_trial_gap: ITI
+      })
+    } else if (trial.Trial == 30) {
+      timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/attentionCheck.jpg',
+        choices: keys.concat('y'),
+        prompt: '<p>Please press the y key.</p>',
+        post_trial_gap: ITI,
+        data: { attentionTrial: true },
+        on_finish: function (data) {
+          data.success = jsPsych.pluginAPI.compareKeys(data.response, 'y')
+          attentionFails += data.success ? 0 : 1
+          if (attentionFails > maxAttentionFails && source == 'prolific') {
+            // Knock out prolific participants
+            knockedOut = true
+            jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+            //window.location = "https://andrexia.com"
+          }
+        }
+      })
+    }
+
+    timeline.push({
+      type: jsPsychImageKeyboardResponse,
+      stimulus: './stimuli/' + trial.Img,
+      choices: keys,
+      prompt: '<p><b>' + keys.join(' - '.repeat(21)) + '</b></p>',
+      post_trial_gap: ITI,
+      data: {
+        SbjID: sbjID,
+        Trial: trial.Trial,
+        TestImage: trial.Img,
+        FoilLevel: trial.FoilLevel,
+        View: trial.View,
+        Noise: trial.Noise,
+        CorrRes: trial.CorrRes,
+        Target: trial.Target,
+        Foil1: trial.Foil1,
+        Foil2: trial.Foil2
+      },
+      on_finish: function (data) {
+        data.Corr = jsPsych.pluginAPI.compareKeys(data.response, keys[Number(data.CorrRes) - 1])
+        data.AttentionFails = attentionFails
+      }
+    })
+  }
+
+  // End card
+  timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+    <p>You have finished this task</p>
+    <p>Press any buttton to continue.</p>
+    `
+  });
+
+  // Run
+  jsPsych.run(timeline);
+</script>
+
+</html>
