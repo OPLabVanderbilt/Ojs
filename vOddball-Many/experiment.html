@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Oddball - Many</title>
+    <script src="https://unpkg.com/jspsych@7.2.1"></script>
+    <link href="https://unpkg.com/jspsych@7.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@jspsych/plugin-browser-check@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.1"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.1"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.1"></script>
+    <script src="./trials.js"></script>
+</head>
+
+<body></body>
+<script>
+    let chainLink = '' // Add link here if you want to link to another experiment/site at finish
+    let maxAttentionFails = 100
+    let doAttentionCheck = true
+
+    let knockedOut = false
+    var jsPsych = initJsPsych({
+        default_iti: 750,
+        on_finish: function () {
+            if (!chainLink == '' && !knockedOut) {
+                window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study
+            }
+        }
+    });
+
+    let study = jsPsych.data.getURLVariable('study')
+    if (study === undefined) {
+        study = 'unknown'
+    }
+
+    // Make id
+    let sbjID = jsPsych.data.getURLVariable('id');
+    if (sbjID === undefined) {
+        sbjID = jsPsych.randomization.randomID(10)
+    }
+
+    // Get attention check counter
+    let attentionFails = Number(jsPsych.data.getURLVariable('attn'))
+    if (isNaN(attentionFails)) {
+        attentionFails = 0
+    }
+
+    // Get source of participant
+    let source = jsPsych.data.getURLVariable('src')
+    if (source === undefined) {
+        source = 'unknown'
+    }
+
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
+
+    let img1Left = 95
+    let img2Left = 325
+    let img3Left = 620
+    if (screenWidth > 960) {
+        // Calculate padding
+        let padding = (screenWidth - 960) / 2
+        img1Left = img1Left + padding
+        img2Left = img2Left + padding
+        img3Left = img3Left + padding
+    }
+
+    let img1Top = 170
+    let img2Top = 260
+    let img3Top = 175
+
+    if (screenHeight > 650) {
+        // Calculate padding
+        let padding = (screenHeight - 650) / 2
+        img1Top = img1Top + padding
+        img2Top = img2Top + padding
+        img3Top = img3Top + padding
+    }
+
+    function makeButtons(images) {
+
+        if (images == null) {
+            return [
+                `<input type="image" src="./stimuli/%choice%" style="position: absolute; left: ${img1Left}px; top: ${img1Top}px"/>`,
+                `<input type="image" src="./stimuli/%choice%" style="position: absolute; left: ${img2Left}px; top: ${img2Top}px"/>`,
+                `<input type="image" src="./stimuli/%choice%" style="position: absolute; left: ${img3Left}px; top: ${img3Top}px"/>`
+            ]
+        } else {
+
+        }
+    }
+
+    // Timeline
+    var timeline = []
+
+    let images = [
+        `./stimuli/template-1.jpg`,
+        `./stimuli/template-2.jpg`,
+        `./stimuli/template-3.jpg`
+    ]
+    for (trial of trials) {
+        images.push(`./stimuli/trial${trial.Trial}-1.jpg`)
+        images.push(`./stimuli/trial${trial.Trial}-2.jpg`)
+        images.push(`./stimuli/trial${trial.Trial}-3.jpg`)
+    }
+    // Preload
+    timeline.push({
+        type: jsPsychPreload,
+        auto_preload: false,
+        images: images
+    })
+
+    // Browser check
+    timeline.push({
+        type: jsPsychBrowserCheck,
+        inclusion_function: (data) => {
+            return !data.mobile
+        },
+        exclusion_message: (data) => {
+            return `
+                <p>You must use a desktop/laptop computer to participate in this 
+                experiment.</p>
+                <p>Please restart the experiment on a desktop/laptop computer.</p>
+            `;
+        },
+    })
+
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+            <p>On each trial, you will see 3 objects.</p>
+            <p>Once they disappear click to choose which one was DIFFERENT.</p>
+        `,
+        choices: ['Click to start practice']
+    })
+
+    for (let trial of trials) {
+        if (trial.Trial == 11) {
+            timeline.push({
+                type: jsPsychHtmlButtonResponse,
+                stimulus: `
+                    <p>There will be 43 more trials, and the objects may be shown more briefly.</p>
+                `,
+                choices: ['Click to start']
+            })
+        } else if (doAttentionCheck && trial.Trial == 37) {
+            timeline.push({
+                type: jsPsychHtmlKeyboardResponse,
+                stimulus: `
+                    <h1 style="position: relative; top: -20vh;">Do not click anything, just wait!</h1>
+                    <img src="./stimuli/trial1-1.jpg" style="position: absolute; left: ${img1Left}px; top: ${img1Top}px">
+                    <img src="./stimuli/trial1-1.jpg" style="position: absolute; left: ${img2Left}px; top: ${img2Top}px">
+                    <img src="./stimuli/trial1-1.jpg" style="position: absolute; left: ${img3Left}px; top: ${img3Top}px">
+                `,
+                choices: ['NO_KEYS'],
+                trial_duration: 4000,
+                post_trial_gap: 0
+            })
+
+            timeline.push({
+                type: jsPsychHtmlButtonResponse,
+                stimulus: `<h2 style="position: relative; top: -20vh;">Which one was different?</h1>`,
+                choices: ['template-1.jpg', 'template-2.jpg', 'template-3.jpg'],
+                button_html: x => makeButtons(),
+                trial_duration: 3000,
+                data: { attentionTrial: true },
+                on_finish: function (data) {
+                    data.success = data.response == null
+                    attentionFails += data.success ? 0 : 1
+                    if (attentionFails > maxAttentionFails && source == 'prolific') {
+                        // Knock out prolific participants
+                        knockedOut = true
+                        jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                        //window.location = "https://andrexia.com"
+                    }
+                }
+            })
+        }
+
+        timeline.push({
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: `
+                <img src="./stimuli/trial${trial.Trial}-1.jpg" style="position: absolute; left: ${img1Left}px; top: ${img1Top}px">
+                <img src="./stimuli/trial${trial.Trial}-2.jpg" style="position: absolute; left: ${img2Left}px; top: ${img2Top}px">
+                <img src="./stimuli/trial${trial.Trial}-3.jpg" style="position: absolute; left: ${img3Left}px; top: ${img3Top}px">
+            `,
+            choices: ['NO_KEYS'],
+            trial_duration: trial.Duration,
+            post_trial_gap: 0
+        })
+
+        timeline.push({
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2 style="position: relative; top: -20vh;">Which one was different?</h1>`,
+            choices: ['template-1.jpg', 'template-2.jpg', 'template-3.jpg'],
+            button_html: x => makeButtons(),
+            data: {
+                SbjID: sbjID,
+                TrialN: trial.Trial,
+                CorrRes: trial.CorrRes - 1,
+                TestTrial: true
+            },
+            on_finish: function (data) {
+                data.Correct = data.CorrRes == data.response
+                data.AttentionFails = attentionFails
+            }
+        })
+
+        if (trial.Feedback) {
+            timeline.push({
+                type: jsPsychHtmlKeyboardResponse,
+                stimulus: function () {
+                    if (jsPsych.data.get().last(1).values()[0].Correct) {
+                        return "<h3>Correct!</h3>"
+                    } else {
+                        return "<h3>Incorrect.</h3>"
+                    }
+                },
+                choices: ['NO_KEYS'],
+                trial_duration: 1000
+            })
+        }
+    }
+
+    // End card
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+            <p>You have completed this test, good job!</p>
+        `,
+        choices: ['Click here to continue'],
+    })
+
+    // Run
+    jsPsych.run(timeline);
+</script>
+
+</html>
