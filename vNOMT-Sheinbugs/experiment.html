@@ -158,7 +158,8 @@
         CorrRes: trial.CorrRes,
         Target: trial.Target,
         Foil1: trial.Foil1,
-        Foil2: trial.Foil2
+        Foil2: trial.Foil2,
+        TestTrial: true
       },
       on_finish: function (data) {
         data.Corr = jsPsych.pluginAPI.compareKeys(data.response, keys[Number(data.CorrRes) - 1])
