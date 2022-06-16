@@ -137,6 +137,15 @@
         choices: ['NO_KEYS'],
         post_trial_gap: 0
     }
+    // Build fixation
+    const fix = {
+        type: jsPsychImageKeyboardResponse,
+        stimulus: `./stimuli/fix.jpg`,
+        trial_duration: 500,
+        choices: ['NO_KEYS'],
+        post_trial_gap: 0
+    }
+
     for (let trial of trials) {
         if (trial.Trial == 4) { // Instruction
             timeline.push({
@@ -159,6 +168,9 @@
                 choices: ['Click to continue']
             })
         } else if (doAttentionCheck && trial.Trial == 41) { // Attention check
+            // Fixation
+            timeline.push(fix)
+
             // Target
             timeline.push({
                 type: jsPsychImageKeyboardResponse,
@@ -194,6 +206,9 @@
             })
         }
 
+        // Fixation
+        timeline.push(fix)
+
         // Target
         timeline.push({
             type: jsPsychImageKeyboardResponse,
@@ -221,7 +236,8 @@
             on_finish: function (data) {
                 data.Correct = data.CorrRes == data.response
                 data.AttentionFails = attentionFails
-            }
+            },
+            post_trial_gap: 0
         })
 
         // Feedback
