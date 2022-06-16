@@ -140,6 +140,14 @@
         choices: ['Click to start practice']
     })
 
+    // Build mask
+    const mask = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "<h1>+</h1>",
+        choices: ['NO_KEYS'],
+        trial_duration: 250,
+    }
+
     for (let trial of trials) {
         if (trial.Trial == 11) {
             timeline.push({
@@ -150,6 +158,8 @@
                 choices: ['Click to start']
             })
         } else if (doAttentionCheck && trial.Trial == 37) {
+            timeline.push(mask)
+
             timeline.push({
                 type: jsPsychHtmlKeyboardResponse,
                 stimulus: `
@@ -182,6 +192,9 @@
                 }
             })
         }
+
+        // Add mask
+        timeline.push(mask)
 
         timeline.push({
             type: jsPsychHtmlKeyboardResponse,
