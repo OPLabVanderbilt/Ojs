@@ -9,6 +9,7 @@
     <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.0"></script>
     <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.0"></script>
     <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.0.0"></script>
     <script src="./trials.js"></script>
 </head>
 
@@ -75,6 +76,12 @@
         }
     })
 
+    // Enter full screen
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: true
+    })
+
     // Preload
     timeline.push({
         type: jsPsychPreload,
@@ -84,13 +91,13 @@
 
     timeline.push({
         type: jsPsychImageKeyboardResponse,
-        stimulus: './stimuli/'+'instruct1.jpg',
+        stimulus: './stimuli/' + 'instruct1.jpg',
         choices: [' ']
     })
 
     timeline.push({
         type: jsPsychImageKeyboardResponse,
-        stimulus: './stimuli/'+'instruct2.jpg',
+        stimulus: './stimuli/' + 'instruct2.jpg',
         choices: [' ']
     })
 
@@ -253,6 +260,12 @@
             }
         })
     }
+
+    // Exit fullscreen
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: false
+    })
 
     // End card
     timeline.push({

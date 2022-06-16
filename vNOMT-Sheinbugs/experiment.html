@@ -9,6 +9,7 @@
   <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.0.0"></script>
   <script src="./trials.js"></script>
 </head>
 
@@ -68,6 +69,12 @@
           <p>Please restart the experiment on a desktop/laptop computer.</p>
         `;
     }
+  })
+
+  // Enter full screen
+  timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: true
   })
 
   // Preload
@@ -168,6 +175,12 @@
       }
     })
   }
+
+  // Exit fullscreen
+  timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: false
+  })
 
   // End card
   timeline.push({

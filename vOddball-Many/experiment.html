@@ -9,6 +9,7 @@
     <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.1"></script>
     <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.1"></script>
     <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.1"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.0.0"></script>
     <script src="./trials.js"></script>
 </head>
 
@@ -51,8 +52,31 @@
         source = 'unknown'
     }
 
-    const screenWidth = window.innerWidth
-    const screenHeight = window.innerHeight
+    // Timeline
+    var timeline = []
+
+    timeline.push({
+        type: jsPsychBrowserCheck,
+        inclusion_function: (data) => {
+            return !data.mobile
+        },
+        exclusion_message: (data) => {
+            return `
+          <p>You must use a desktop/laptop computer to participate in this 
+          experiment.</p>
+          <p>Please restart the experiment on a desktop/laptop computer.</p>
+        `;
+        }
+    })
+
+    // Enter full screen
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: true
+    })
+
+    const screenWidth = window.screen.width
+    const screenHeight = window.screen.height
 
     let img1Left = 95
     let img2Left = 325
@@ -90,9 +114,6 @@
         }
     }
 
-    // Timeline
-    var timeline = []
-
     let images = [
         `./stimuli/template-1.jpg`,
         `./stimuli/template-2.jpg`,
@@ -108,21 +129,6 @@
         type: jsPsychPreload,
         auto_preload: false,
         images: images
-    })
-
-    // Browser check
-    timeline.push({
-        type: jsPsychBrowserCheck,
-        inclusion_function: (data) => {
-            return !data.mobile
-        },
-        exclusion_message: (data) => {
-            return `
-                <p>You must use a desktop/laptop computer to participate in this 
-                experiment.</p>
-                <p>Please restart the experiment on a desktop/laptop computer.</p>
-            `;
-        },
     })
 
     timeline.push({
@@ -221,6 +227,12 @@
             })
         }
     }
+
+    // Exit fullscreen
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: false
+    })
 
     // End card
     timeline.push({
