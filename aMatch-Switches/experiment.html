@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>aMatching-Switches</title>
+    <script src="https://unpkg.com/jspsych@7.2.1"></script>
+    <link href="https://unpkg.com/jspsych@7.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@jspsych/plugin-browser-check@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.1"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-audio-keyboard-response@1.1.1"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.0.0"></script>
+    <script src="./trials.js"></script>
+</head>
+
+<body></body>
+<script>
+    let chainLink = '' // Add link here if you want to link to another experiment/site at finish
+    let maxAttentionFails = 1000000000
+    let doAttentionCheck = false
+
+    let knockedOut = false
+    var jsPsych = initJsPsych({
+        on_finish: function () {
+            if (!chainLink == '' && !knockedOut) {
+                window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study
+            }
+        }
+    });
+
+    let study = jsPsych.data.getURLVariable('study')
+    if (study === undefined) {
+        study = 'unknown'
+    }
+
+    // Make id
+    let sbjID = jsPsych.data.getURLVariable('id');
+    if (sbjID === undefined) {
+        sbjID = jsPsych.randomization.randomID(10)
+    }
+
+    // Get attention check counter
+    let attentionFails = Number(jsPsych.data.getURLVariable('attn'))
+    if (isNaN(attentionFails)) {
+        attentionFails = 0
+    }
+
+    // Get source of participant
+    let source = jsPsych.data.getURLVariable('src')
+    if (source === undefined) {
+        source = 'unknown'
+    }
+
+    // Timeline
+    var timeline = [];
+
+    timeline.push({
+        type: jsPsychBrowserCheck,
+        inclusion_function: (data) => {
+            return !data.mobile
+        },
+        exclusion_message: (data) => {
+            return `
+        <p>You must use a desktop/laptop computer to participate in this
+        experiment.</p>
+        <p>Please restart the experiment on a desktop/laptop computer.</p>
+      `;
+        }
+    })
+
+    // Enter full screen
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: true
+    })
+
+    // Preload
+    timeline.push({
+        type: jsPsychPreload,
+        auto_preload: true
+    });
+
+    // Starting gesture for Audio
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+    <p>In this test, you will be listening to audio clips.</p>
+  `,
+        choices: ['Begin'],
+        post_trial_gap: 500
+    });
+
+    // Audio check trial
+    let audioCheck = {
+        type: jsPsychAudioKeyboardResponse,
+        prompt: 'Please adjust your audio volume and follow the spoken instructions.',
+        stimulus: './stimuli/SoundCheck.mp3',
+        choices: '5',
+        trial_ends_after_audio: true,
+        post_trial_gap: 250
+    };
+
+    timeline.push({
+        timeline: [audioCheck],
+        loop_function: d => !jsPsych.pluginAPI.compareKeys(d.values()[0].response, '5')
+    });
+
+    // Instructions
+    timeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+    <p>In this test, you will first hear a five second clip of a
+    button being clicked.</p>
+    <p>After a short delay, you will hear another five second
+    clip of a button being clicked.</p>
+    <p>You will need to determine if the two clips are the same
+    or different buttons.</p>
+    <p>Press the <b>f</b> key for same and the <b>j</b> key for
+    different</p>
+    <p>Press any key to continue.</p>
+  `,
+        post_trial_gap: 500
+    });
+
+    timeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+    <p>The cadence of the button clicks may change but does not matter.</p>
+    <p>The timbre, pitch, and clicking noises are relevant to differentiate
+    buttons.</p>
+    <p>Respond as quickly as possible without sacrificing accuracy.</p>
+    <p>We will start with practice trials.</p>
+    <p>Press any key to continue.</p>
+  `,
+        post_trial_gap: 500
+    });
+
+    // Audio check trial
+    let example1 = {
+        type: jsPsychAudioKeyboardResponse,
+        prompt: 'Clip 1',
+        stimulus: './stimuli/Example1.mp3',
+        choices: 'NO_KEYS',
+        trial_ends_after_audio: true,
+        post_trial_gap: 1000
+    };
+
+    let example2 = {
+        type: jsPsychAudioKeyboardResponse,
+        stimulus: './stimuli/Example2.mp3',
+        choices: ['j', 'f'],
+        prompt: 'Clip 2<p>Same (f) -- different (j)</p>',
+        post_trial_gap: 1000
+    };
+
+    timeline.push({
+        timeline: [example1, example2],
+        loop_function: d => !jsPsych.pluginAPI.compareKeys(d.values()[1].response, 'j')
+    });
+
+    timeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+    <p>Correct!</p>
+    <p>Remember:</p>
+    <p>The cadence of the button clicks may change but does not matter.</p>
+    <p>The timbre, pitch, and clicking noises are relevant to differentiate
+    buttons.</p>
+    <p>Respond as quickly as possible without sacrificing accuracy.</p>
+    <p><b>These tests are designed to be hard at times. Take your time but if
+    you are not sure, take your best guess.</b></p>
+    <p>We will move onto the real trials.</p>
+    <p>Press any key to continue.</p>
+  `,
+        post_trial_gap: 500
+    })
+
+    let stim1, stim2
+    let trialCounter = 0
+    for (let i = 0; i < trials.length; i++) {
+        trialCounter += 1
+
+        if (doAttentionCheck && trialCounter == 45) {
+            // Presentation 1
+            timeline.push({
+                type: jsPsychAudioKeyboardResponse,
+                prompt: 'Clip 1',
+                stimulus: './stimuli/attentionCheck1.mp3',
+                choices: 'NO_KEYS',
+                trial_ends_after_audio: true,
+                post_trial_gap: 1000
+            })
+
+            // Presentation 2
+            timeline.push({
+                type: jsPsychAudioKeyboardResponse,
+                stimulus: './stimuli/attentionCheck2.mp3',
+                choices: ['j', 'f'],
+                prompt: 'Clip 2<p>Same (f) -- different (j)</p>',
+                post_trial_gap: 1000,
+                data: {
+                    attentionTrial: true
+                },
+                on_finish: function (data) {
+                    data.success = jsPsych.pluginAPI.compareKeys(data.response, 'q')
+                    attentionFails += data.success ? 0 : 1
+                    if (attentionFails > maxAttentionFails && source == 'prolific') {
+                        // Knock out prolific participants
+                        knockedOut = true
+                        jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                        //window.location = "https://andrexia.com"
+                    }
+                }
+            })
+        }
+        // Presentation 1
+        timeline.push({
+            type: jsPsychAudioKeyboardResponse,
+            prompt: 'Clip 1',
+            stimulus: './stimuli/' + trials[i].Stim1,
+            choices: 'NO_KEYS',
+            trial_ends_after_audio: true,
+            post_trial_gap: 1000
+        })
+
+        // Presentation 2
+        timeline.push({
+            type: jsPsychAudioKeyboardResponse,
+            stimulus: './stimuli/' + trials[i].Stim2,
+            choices: ['j', 'f'],
+            prompt: 'Clip 2<p>Same (f) -- different (j)</p>',
+            post_trial_gap: 1000,
+            data: {
+                testTrial: true,
+                sbjID: sbjID,
+                trialN: trialCounter,
+                stim1: trials[i].Stim1,
+                stim2: trials[i].Stim2,
+                corrRes: trials[i].CorrRes
+            },
+            on_finish: function (data) {
+                data.corr = jsPsych.pluginAPI.compareKeys(data.response, data.corrRes);
+                data.AttentionFails = attentionFails
+            }
+        })
+    }
+
+    timeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+    <p>You are half way through this test!</p>
+    <p>Respond as quickly as possible without sacrificing accuracy.</p>
+    <p>Press any key to continue.</p>
+  `,
+        post_trial_gap: 500
+    })
+
+    for (let i = 0; i < trials.length; i++) {
+        trialCounter += 1
+
+        if (doAttentionCheck && trialCounter == 40) {
+            // Presentation 1
+            timeline.push({
+                type: jsPsychAudioKeyboardResponse,
+                prompt: 'Clip 1',
+                stimulus: './stimuli/AttentionCheck1.mp3',
+                choices: 'NO_KEYS',
+                trial_ends_after_audio: true,
+                post_trial_gap: 1000
+            })
+
+            // Presentation 2
+            timeline.push({
+                type: jsPsychAudioKeyboardResponse,
+                stimulus: './stimuli/AttentionCheck2.mp3',
+                choices: ['j', 'f'],
+                prompt: 'Clip 2<p>Same (f) -- different (j)</p>',
+                post_trial_gap: 1000,
+                data: { attentionTrial: true },
+                on_finish: function (data) {
+                    data.success = jsPsych.pluginAPI.compareKeys(data.response, 'j')
+                    attentionFails += data.success ? 0 : 1
+                    if (attentionFails > maxAttentionFails && source == 'prolific') {
+                        // Knock out prolific participants
+                        knockedOut = true
+                        jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                        //window.location = "https://andrexia.com"
+                    }
+                }
+            })
+        }
+
+        // Presentation 1
+        timeline.push({
+            type: jsPsychAudioKeyboardResponse,
+            prompt: 'Clip 1',
+            stimulus: './stimuli/' + trials2[i].Stim1,
+            choices: 'NO_KEYS',
+            trial_ends_after_audio: true,
+            post_trial_gap: 1000
+        })
+
+        // Presentation 2
+        timeline.push({
+            type: jsPsychAudioKeyboardResponse,
+            stimulus: './stimuli/' + trials2[i].Stim2,
+            choices: ['j', 'f'],
+            prompt: 'Clip 2<p>Same (f) -- different (j)</p>',
+            post_trial_gap: 1000,
+            data: {
+                testTrial: true,
+                sbjID: sbjID,
+                trialN: trialCounter,
+                stim1: trials2[i].Stim1,
+                stim2: trials2[i].Stim2,
+                corrRes: trials2[i].CorrRes
+            },
+            on_finish: function (data) {
+                data.corr = jsPsych.pluginAPI.compareKeys(data.response, data.corrRes)
+                data.attentionFails = attentionFails
+            }
+        })
+    }
+
+    // Exit fullscreen
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: false
+    })
+
+
+    // End card
+    timeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+  <p>You have finished this test!</p>
+  <p>Good job! This is 1 of 4 tests, don't worry later tests are shorter.</p>
+  <p>Press any buttton to continue.</p>
+  `
+    });
+
+    // Run
+    jsPsych.run(timeline);
+</script>
+
+</html>
