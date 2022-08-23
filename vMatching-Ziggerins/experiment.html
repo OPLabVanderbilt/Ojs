@@ -26,6 +26,7 @@
 
     let chainLink = '' // Change this if you want to link to another experiment/site
     let maxAttentionFails = 1
+    let doAttentionCheck = false
 
     let knockedOut = false
     var jsPsych = initJsPsych({
@@ -180,7 +181,7 @@
                 choices: [' '],
                 post_trial_gap: ITI
             })
-        } else if (trial.Trial == 80) { // Attention check
+        } else if (doAttentionCheck && trial.Trial == 80) { // Attention check
             // Fixation
             timeline.push(fix)
 

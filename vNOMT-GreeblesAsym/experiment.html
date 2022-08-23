@@ -20,6 +20,7 @@
 
     let chainLink = '' // Add link here if you want to link to another experiment/site at finish
     let maxAttentionFails = 1
+    let doAttentionCheck = false
 
     let knockedOut = false
     var jsPsych = initJsPsych({
@@ -212,7 +213,7 @@
         `,
                 choices: [' '],
             })
-        } else if (trial.TrialN == 45) {
+        } else if (doAttentionCheck && trial.TrialN == 45) {
             timeline.push({
                 type: jsPsychImageKeyboardResponse,
                 stimulus: './stimuli/attentionCheck.jpg',
