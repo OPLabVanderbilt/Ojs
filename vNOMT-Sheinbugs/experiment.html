@@ -39,7 +39,7 @@
   // Make id
   let sbjID = jsPsych.data.getURLVariable('id');
   if (sbjID === undefined) {
-    sbjID = Date.now()
+    sbjID = jsPsych.randomization.randomID(10)
   }
 
   // Get attention check counter
