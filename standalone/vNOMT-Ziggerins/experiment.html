@@ -7,6 +7,7 @@
   <link href="./jspsych/jspsych.css" rel="stylesheet" type="text/css" />
   <script src="./jspsych/plugin-preload.js"></script>
   <script src="./jspsych/plugin-html-keyboard-response.js"></script>
+  <script src="./jspsych/plugin-html-button-response.js"></script>
   <script src="./jspsych/plugin-image-keyboard-response.js"></script>
   <script src="./jspsych/plugin-fullscreen.js"></script>
   <script src="./jspsych/plugin-survey-html-form.js"></script>
@@ -164,12 +165,12 @@
 
   // End card
   timeline.push({
-    type: jsPsychHtmlKeyboardResponse,
+    type: jsPsychHtmlButtonResponse,
     stimulus: `
-    <p>You have finished this task</p>
-    <p>Press any buttton to continue.</p>
-    `
-  });
+            <p>You have completed this test, good job!</p>
+        `,
+    choices: ['Save data'],
+  })
 
   // Run
   jsPsych.run(timeline);
