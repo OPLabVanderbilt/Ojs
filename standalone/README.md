@@ -16,5 +16,8 @@ as a download.
 Each test has limited options that can be edited by editing the experiment.html
 file with a text editor.
 
+Other forms of object recognition ability tests is available in the root of 
+this repository.
+
 If you use any of these tests, please cite the following paper:
 CITATION
