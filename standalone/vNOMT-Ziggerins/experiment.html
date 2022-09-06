@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>vNOMT-Ziggerins</title>
+  <script src="./jspsych/jspsych.js"></script>
+  <link href="./jspsych/jspsych.css" rel="stylesheet" type="text/css" />
+  <script src="./jspsych/plugin-preload.js"></script>
+  <script src="./jspsych/plugin-html-keyboard-response.js"></script>
+  <script src="./jspsych/plugin-image-keyboard-response.js"></script>
+  <script src="./jspsych/plugin-fullscreen.js"></script>
+  <script src="./jspsych/plugin-survey-html-form.js"></script>
+  <script src="./trials.js"></script>
+</head>
+
+<body></body>
+<script>
+  const keys = ['g', 'h', 'j']
+  const ITI = 500
+  const doAttentionCheck = true
+
+  var jsPsych = initJsPsych({
+    on_finish: function () {
+      let timestamp = new Date().toISOString()
+      jsPsych.data.get().localSave('csv', `${sbjID}_vNOMT-Ziggerins_${timestamp}.csv`)
+    }
+  });
+
+  // Timeline
+  var timeline = [];
+
+  // Initial survey
+  let attentionFails = 0
+  let sbjID, study, experimenter
+  timeline.push({
+    type: jsPsychSurveyHtmlForm,
+    html: `
+      <p>Subject ID</br><input type="text" id="sbjID" name="sbjID" size="10" /></p>
+      <p>Experimenter</br><input type="text" id="experimenter" name="experimenter" size="10" /></p>
+      <p>Study</br><input type="text" id="study" name="study" size="10" /></p>
+    `,
+    on_finish: function (data) {
+      let surveyData = data.response
+
+      sbjID = surveyData.sbjID == '' ?
+        jsPsych.randomization.randomID(10) : surveyData.sbjID
+      experimenter = surveyData.experimenter == '' ?
+        'unknown' : surveyData.experimenter
+      study = surveyData.study == '' ?
+        'unknown' : surveyData.study
+
+      jsPsych.data.addProperties({
+        SbjID: sbjID,
+        Experimenter: experimenter,
+        Study: study,
+        source: 'in-lab'
+      })
+    }
+  })
+
+  // Enter full screen
+  timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: true
+  })
+
+  // Preload
+  timeline.push({
+    type: jsPsychPreload,
+    auto_preload: true
+  })
+
+  timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+        <p>In this task you will learn to recognize six new examples from a category.</p>
+        <p>First you will study the six examples, and then there will be a test phase.</p>
+        <p>Press the spacebar to continue.</p>
+      `,
+    choices: [' '],
+    post_trial_gap: ITI
+  })
+
+  timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+        <p>In each test trial you will see 3 images: ONE of the studied images (target) + TWO distractors.</p>
+        <p>There will always be a target present, but sometimes it will be presented in visual noise.</p>
+        <p>Your task will be to select the target image from among the distractors.</p>
+        <p>Response keys will be presented below each image. Take your time, and be as ACCURATE as possible.</p>
+        <p>Press the spacebar to continue.</p>
+      `,
+    choices: [' '],
+    post_trial_gap: ITI
+  })
+
+  for (let trial of trials) {
+    if (trial.Trial == 1 || trial.Trial == 7) {
+      timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/Ziggerins_study1.jpg',
+        choices: [' '],
+        post_trial_gap: ITI
+      })
+    } else if (trial.Trial == 25) {
+      timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/diffview_instruct.jpg',
+        choices: [' '],
+        post_trial_gap: ITI
+      })
+
+      timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/Ziggerins_study2.jpg',
+        choices: [' '],
+        post_trial_gap: ITI
+      })
+    } else if (doAttentionCheck && trial.Trial == 30) {
+      timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/attentionCheck.jpg',
+        choices: keys.concat('y'),
+        prompt: '<p>Please press the y key.</p>',
+        post_trial_gap: ITI,
+        data: { attentionTrial: true },
+        on_finish: function (data) {
+          data.success = jsPsych.pluginAPI.compareKeys(data.response, 'y')
+          attentionFails += data.success ? 0 : 1
+        }
+      })
+    }
+
+    timeline.push({
+      type: jsPsychImageKeyboardResponse,
+      stimulus: './stimuli/' + trial.Img,
+      choices: keys,
+      prompt: '<p><b>' + keys.join(' - '.repeat(21)) + '</b></p>',
+      post_trial_gap: ITI,
+      data: {
+        TestTrial: true,
+        Trial: trial.Trial,
+        TestImage: trial.Img,
+        FoilLevel: trial.FoilLevel,
+        View: trial.View,
+        Noise: trial.Noise,
+        CorrRes: trial.CorrRes,
+        Target: trial.Target,
+        Foil1: trial.Foil1,
+        Foil2: trial.Foil2,
+      },
+      on_finish: function (data) {
+        data.Corr = jsPsych.pluginAPI.compareKeys(data.response, keys[Number(data.CorrRes) - 1])
+        data.AttentionFails = attentionFails
+      }
+    })
+  }
+
+  // Exit fullscreen
+  timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: false
+  })
+
+  // End card
+  timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+    <p>You have finished this task</p>
+    <p>Press any buttton to continue.</p>
+    `
+  });
+
+  // Run
+  jsPsych.run(timeline);
+</script>
+
+</html>
