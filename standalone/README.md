@@ -4,7 +4,7 @@ have been packaged as standalone folders for each test so that they can be used
 easily offline. All tests will run with attention checks in the middle of the
 test by default.
 
-To download the tests, download the zip file from this [release](github.com). 
+To download the tests, download the zip file from this [release](https://github.com/OPLabVanderbilt/Ojs/releases/download/v1.6/oJS-standalone.zip). 
 Then unzip the file and each test will be in a separate folder ready to use. 
 
 To run a test, just open the experiment.html file. It should open in your 
