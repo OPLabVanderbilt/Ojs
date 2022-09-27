@@ -22,7 +22,6 @@
     img1TimeLong = 300
     img1TimeShort = 150
     maskTime = 500
-    responseTime = 3000
 
     let chainLink = '' // Change this if you want to link to another experiment/site
     let maxAttentionFails = 1
@@ -203,7 +202,6 @@
                 type: jsPsychImageKeyboardResponse,
                 stimulus: './stimuli/nz1_10_a.jpg',
                 stimulus_height: trial.Size == 'same' ? 125 : 95,
-                trial_duration: responseTime,
                 choices: [sameKey, diffKey],
                 post_trial_gap: ITI,
                 data: { attentionTrial: true },
