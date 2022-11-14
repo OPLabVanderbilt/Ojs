@@ -1,5 +1,5 @@
 # Standalone Tests for Object Recognition Ability (o)
-Here, we have standalone versions of the tests used in CITE (???). These tests
+Here, we have standalone versions of the tests used in Smithson et al. (in prep). These tests
 have been packaged as standalone folders for each test so that they can be used
 easily offline. All tests will run with attention checks in the middle of the
 test by default.
@@ -20,4 +20,4 @@ Other forms of object recognition ability tests is available in the root of
 this repository.
 
 If you use any of these tests, please cite the following paper:
-CITATION
+Smithson, C., Chow, J.K., Chang, T.Y., Gauthier. I. (2022). *Measuring Object Recognition Ability: Reliability, Validity and the Aggregate z-score Approach.* Manuscript in preparation.
