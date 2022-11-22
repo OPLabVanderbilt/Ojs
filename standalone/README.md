@@ -20,4 +20,4 @@ Other forms of object recognition ability tests is available in the root of
 this repository.
 
 If you use any of these tests, please cite the following paper:
-Smithson, C., Chow, J.K., Chang, T.Y., Gauthier. I. (2022). *Measuring Object Recognition Ability: Reliability, Validity and the Aggregate z-score Approach.* Manuscript in preparation.
+Smithson, C.J.R., Chow, J.K., Chang, T.Y., Gauthier. I. (2022). *Measuring Object Recognition Ability: Reliability, Validity and the Aggregate z-score Approach.* Manuscript in preparation.
