@@ -61,25 +61,23 @@
                 type: jsPsychAudioKeyboardResponse,
                 prompt: '<b>' + keys[i] + '</b>',
                 stimulus: "./stimuli/" + trial['Stim' + (i + 1)],
-                choices: keys,
+                choices: 'NO_KEYS',
                 trial_ends_after_audio: true,
                 post_trial_gap: 250
-            }
-
-            // Continue if previous trial didn't have a response
-            if (i > 0) {
-                tmp = {
-                    timeline: [tmp],
-                    conditional_function: d => !jsPsych.data.get().last(1).values()[0].response
-                }
             }
 
             trialTimeline.push(tmp)
         }
 
-        return {
-            timeline: trialTimeline,
-            loop_function: d => !d.values().filter(d => d.response).length,
+        // Add response
+        trialTimeline.push({
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: `
+                <p>Which audio clip was from a different button?</p>
+                <p><b>${keys[0]}</b>-<b>${keys[1]}</b>-<b>${keys[2]}</b></p>
+            `,
+            choices: keys,
+            post_trial_gap: 250,
             data: {
                 TestTrial: true,
                 SbjID: sbjID,
@@ -90,17 +88,14 @@
                 CorrRes: keys[trial.CorrRes - 1],
                 Oddball: trial.Oddball,
                 Pair: trial.Pair,
-                Noise: trial.Noise,
-                Vary: trial.Vary,
-                ClipsPlayed: 0,
+                Noise: trial.Noise
             },
             on_finish: function (data) {
-                data.ClipsPlayed++
-                if (data.response) {
-                    data.Corr = jsPsych.pluginAPI.compareKeys(data.response, data.CorrRes)
-                }
+                data.Corr = jsPsych.pluginAPI.compareKeys(data.response, data.CorrRes)
             }
-        }
+        })
+
+        return trialTimeline
     }
 
     // Timeline
@@ -178,13 +173,15 @@
     timeline.push({
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `
-    <p>While listening to the audio clips, you should press the corresponding
-        key to select one of the audio clip.</p>
-    <p>Press <b>${keys[0]}</b> if the first clip is from a different button</p>
-    <p>Press <b>${keys[1]}</b> if the second clip is from a different button</p>
-    <p>Press <b>${keys[2]}</b> if the third clip is from a different button</p>
-    <p>Clips will play one after another and repeat after the third, you can
-    respond during any clip.</p>
+    <p>You will hear three audio clips of buttons being clicked.</p>
+    <p>Two audio clips will come from the same button and one will come from a
+        different button.</p>
+    <p>The audio clips will not repeat.</p>
+    <p>After all three audio clips have been played, you will be asked which
+        audio clip came from a different button.</p>
+    <p>Press <b>${keys[0]}</b> if the first audio clip is from a different button</p>
+    <p>Press <b>${keys[1]}</b> if the second audio clip is from a different button</p>
+    <p>Press <b>${keys[2]}</b> if the third audio clip is from a different button</p>
     <p>Respond as quickly and accurately as possible without
     sacrificing accuracy.</p>
     <p><b>These tests are designed to be hard at times. Take your time but if
@@ -245,18 +242,20 @@
         stimulus: `
             <p>Good job! You are ready to start the test.</p>
             <p><b>Remember:</b></p>
-            <p>While listening to the audio clips, you should press the corresponding
-                key to select one of the audio clip.</p>
-            <p>Press <b>${keys[0]}</b> if the first clip is from a different button</p>
-            <p>Press <b>${keys[1]}</b> if the second clip is from a different button</p>
-            <p>Press <b>${keys[2]}</b> if the third clip is from a different button</p>
-            <p>Clips will play one after another and repeat after the third, you can
-            respond during any clip.</p>
+            <p>You will hear three audio clips of buttons being clicked.</p>
+            <p>Two audio clips will come from the same button and one will come from a
+                different button.</p>
+            <p>The audio clips will not repeat.</p>
+            <p>After all three audio clips have been played, you will be asked which
+                audio clip came from a different button.</p>
+            <p>Press <b>${keys[0]}</b> if the first audio clip is from a different button</p>
+            <p>Press <b>${keys[1]}</b> if the second audio clip is from a different button</p>
+            <p>Press <b>${keys[2]}</b> if the third audio clip is from a different button</p>
             <p>Respond as quickly and accurately as possible without
             sacrificing accuracy.</p>
             <p><b>These tests are designed to be hard at times. Take your time but if
             you are not sure, take your best guess.</b></p>
-            <p>Press any key to start the test.</p>
+            <p>Press any key to continue.</p>
         `,
         post_trial_gap: 500
     });
