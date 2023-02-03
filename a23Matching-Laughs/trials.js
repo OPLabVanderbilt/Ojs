@@ -4,7 +4,6 @@ const trials = [
         "Target": 'FS104D1.WAV',
         "Choice1": 'FS153D5.WAV',
         "Choice2": 'FS104D6.WAV',
-        "Choice3": undefined,
         "CorrRes": 2
     },
     {
@@ -12,16 +11,14 @@ const trials = [
         "Target": 'FS113S3.WAV',
         "Choice1": 'FS113S6.WAV',
         "Choice2": 'FS179D4.WAV',
-        "Choice3": undefined,
         "CorrRes": 1
     },
     {
         "TrialN": 3,
         "Target": 'FS125D3.WAV',
         "Choice1": 'FS163D2.WAV',
-        "Choice2": 'fs232d4.wav',
-        "Choice3": 'FS125D4.WAV',
-        "CorrRes": 3
+        "Choice2": 'FS125D4.WAV',
+        "CorrRes": 2
     },
     {
         "TrialN": 4,

@@ -1,4 +1,4 @@
-const keys = ['f', 'g', 'h']
+const keys = ['f', 'g']
 
 let chainLink = ''
 let maxAttentionFails = 10000
@@ -7,7 +7,6 @@ let doAttentionChecks = false
 let knockedOut = false
 let jsPsych = initJsPsych({
     on_finish: function () {
-        jsPsych.data.get().localSave('csv', 'testData.csv')
         if (!chainLink == '' && !knockedOut) {
             window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study
         }
@@ -37,68 +36,98 @@ if (source === undefined) {
     source = 'unknown'
 }
 
-function makeTrial(trial) {
-    // Add clips in nested timeline
+function makeTrial(trial, feedback = false) {
+    // Add trials to nested timeline
     let trialTimeline = []
 
-    for (let i = 0; i < 3; i++) {
-        // Skip third stimulus if not needed
-        if (trial['Choice' + (i + 1)] === undefined) {
-            continue
-        }
+    // Present target
+    trialTimeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+        <p>Press space to hear the target person laugh.</p>
+        <p>Listen carefully, it may be fast!</p>
+        `,
+        choices: [' '],
+        post_trial_gap: 500
+    })
 
-        let tmp = {
+    // Present target
+    trialTimeline.push({
+        type: jsPsychAudioKeyboardResponse,
+        prompt: "Target",
+        stimulus: './stimuli/' + trial.Target,
+        trial_ends_after_audio: true,
+        choices: 'NO_KEYS',
+        post_trial_gap: 250,
+    })
+
+    // Present test stimuli
+    for (let i = 0; i < 2; i++) {
+        trialTimeline.push({
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: `
+                <p>Press space to hear the option ${i + 1}.</p>
+                <p>Listen carefully, it may be fast!</p>
+            `,
+            choices: [' '],
+            post_trial_gap: 500
+        })
+
+        trialTimeline.push({
             type: jsPsychAudioKeyboardResponse,
-            prompt: '<b>' + keys[i] + '</b>',
+            prompt: "Option " + (i + 1),
             stimulus: './stimuli/' + trial['Choice' + (i + 1)],
-            choices: keys,
+            choices: 'NO_KEYS',
             trial_ends_after_audio: true,
-            post_trial_gap: 1000,
-            on_finish: function (data) {
-                // Check if a response was made
-                if (data.response === null) {
-                    data.Correct = null
-                } else {
-                    data.Correct = jsPsych.pluginAPI.compareKeys(data.response, keys[trial.CorrRes - 1])
-                }
-                console.log(data)
-            }
-        }
-
-        // Continue if previous trial didn't have a response
-        if (i > 0) {
-            tmp = {
-                timeline: [tmp],
-                conditional_function: d => !jsPsych.data.get().last(1).values()[0].response
-            }
-        }
-
-        trialTimeline.push(tmp)
+            post_trial_gap: 250,
+        })
     }
 
-    return [
-        {
-            type: jsPsychAudioKeyboardResponse,
-            prompt: "Target",
-            stimulus: './stimuli/' + trial.Target,
-            choices: 'NO_KEYS',
-            post_trial_gap: 1000,
-            trial_ends_after_audio: true
-        }, {
-            timeline: trialTimeline,
-            loop_function: d => !d.values().filter(d => d.response).length,
-            data: {
-                TestTrial: true,
-                SbjID: sbjID,
-                TrialN: trial.TrialN,
-                Target: trial.Target,
-                Choice1: trial.Choice1,
-                Choice2: trial.Choice2,
-                Choice3: trial.Choice3,
-                CorrRes: keys[trial.CorrRes - 1]
-            }
+    // Present response window
+    trialTimeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+            <p>If option 1 is the target person laughing, press ${keys[0]}.</p>
+            <p>If option 2 is the target person laughing, press ${keys[1]}.</p>
+        `,
+        choices: keys,
+        post_trial_gap: 250,
+        data: {
+            TestTrial: true,
+            SbjID: sbjID,
+            TrialN: trial.TrialN,
+            Target: trial.Target,
+            Choice1: trial.Choice1,
+            Choice2: trial.Choice2,
+            CorrRes: keys[trial.CorrRes - 1],
+        },
+        on_finish: function (data) {
+            data.Correct = jsPsych.pluginAPI.compareKeys(data.response, keys[trial.CorrRes - 1])
         }
-    ]
+    })
+
+    // Add feedback if needed
+    if (feedback) {
+        trialTimeline.push({
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: function () {
+                let lastTrial = jsPsych.data.get().last(1).values()[0]
+                if (lastTrial.Correct) {
+                    return `
+                        <p">Correct!</p>
+                    `
+                } else {
+                    return `
+                        <p">Incorrect!</p>
+                    `
+                }
+            },
+            choices: 'NO_KEYS',
+            trial_duration: 1500,
+        })
+    }
+
+    return trialTimeline
 }
 
 // Timeline
@@ -160,9 +189,9 @@ timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
     <p>This task will test your ability to recognize people from their laugh.</p>
-    <p>First, you will hear a target person laughing.</p>
-    <p>Then, you will hear other audio clips of people laughing.</p>
-    <p>You will need to decide which of these test clips is the same person as the person from the target.</p>
+    <p>First, you will hear the target person laughing.</p>
+    <p>Then, you will hear other test audio clips of people laughing.</p>
+    <p>Afterwards, you will need to decide which of these test clips is the same person as the target person.</p>
     <p>Press any key to continue.</p>
   `,
     post_trial_gap: 500
@@ -173,8 +202,7 @@ timeline.push({
     stimulus: `
     <p>If the first test clip is the same person as the target, press the <b>${keys[0]}</b> key.</p>
     <p>If the second test clip is the same person as the target, press the <b>${keys[1]}</b> key.</p>
-    <p>If you don't make a response, test clips will repeat until you make a response.</p>
-    <p><i>Note in this prototype, we have 2 trials that are 2AFC and 2 trials that are 3AFC.</i></p>
+    <p>Take your time as these trials are designed to be hard sometimes. If you're not sure, just make your best guess.</p>
     <p>Press any key to continue.</p>
   `,
     post_trial_gap: 500
