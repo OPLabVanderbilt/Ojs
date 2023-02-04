@@ -1,4 +1,4 @@
-const keys = ['f', 'g']
+const keys = ['f', 'j']
 
 let chainLink = ''
 let maxAttentionFails = 10000
@@ -57,38 +57,53 @@ function makeTrial(trial, feedback = false) {
         prompt: "Target",
         stimulus: './stimuli/' + trial.Target,
         trial_ends_after_audio: true,
-        choices: 'NO_KEYS',
-        post_trial_gap: 250,
+        choices: 'NO_KEYS'
     })
 
-    // Present test stimuli
-    for (let i = 0; i < 2; i++) {
-        trialTimeline.push({
-            type: jsPsychHtmlKeyboardResponse,
-            stimulus: `
-                <p>Press space to hear the option ${i + 1}.</p>
-                <p>Listen carefully, it may be fast!</p>
-            `,
-            choices: [' '],
-            post_trial_gap: 500
-        })
+    // Present test stimuli 1
+    trialTimeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+            <p>Option 1 (${keys[0]}) ------------------ Option 2 (${keys[1]})</p>
+            <p>Press space to hear the option 1.</p>
+            <p>Listen carefully, it may be fast!</p>
+        `,
+        choices: [' ']
+    })
 
-        trialTimeline.push({
-            type: jsPsychAudioKeyboardResponse,
-            prompt: "Option " + (i + 1),
-            stimulus: './stimuli/' + trial['Choice' + (i + 1)],
-            choices: 'NO_KEYS',
-            trial_ends_after_audio: true,
-            post_trial_gap: 250,
-        })
-    }
+    trialTimeline.push({
+        type: jsPsychAudioKeyboardResponse,
+        prompt: `<p><b>Option 1 (${keys[0]})</b> ------------------ Option 2 (${keys[1]})</p>`,
+        stimulus: './stimuli/' + trial['Choice1'],
+        choices: 'NO_KEYS',
+        trial_ends_after_audio: true
+    })
+
+    // Present test stimuli 2
+    trialTimeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+            <p>Option 1 (${keys[0]}) ------------------ Option 2 (${keys[1]})</p>
+            <p>Press space to hear the option 2.</p>
+            <p>Listen carefully, it may be fast!</p>
+        `,
+        choices: [' ']
+    })
+
+    trialTimeline.push({
+        type: jsPsychAudioKeyboardResponse,
+        prompt: `<p>Option 1 (${keys[0]}) ------------------ <b>Option 2 (${keys[1]})</b></p>`,
+        stimulus: './stimuli/' + trial['Choice2'],
+        choices: 'NO_KEYS',
+        trial_ends_after_audio: true
+    })
 
     // Present response window
     trialTimeline.push({
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `
-            <p>If option 1 is the target person laughing, press ${keys[0]}.</p>
-            <p>If option 2 is the target person laughing, press ${keys[1]}.</p>
+            <p>Option 1 (${keys[0]}) ------------------ Option 2 (${keys[1]})</p>
+            <p>Which option is the same person as the target?</p>
         `,
         choices: keys,
         post_trial_gap: 250,
