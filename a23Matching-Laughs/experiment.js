@@ -100,6 +100,7 @@ function makeTrial(trial, feedback = false) {
             Choice1: trial.Choice1,
             Choice2: trial.Choice2,
             CorrRes: keys[trial.CorrRes - 1],
+            DiffScore: trial.DiffScore,
         },
         on_finish: function (data) {
             data.Correct = jsPsych.pluginAPI.compareKeys(data.response, keys[trial.CorrRes - 1])
