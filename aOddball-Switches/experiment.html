@@ -155,7 +155,7 @@
     timeline.push({
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `
-    <p>This task will test your ability to detect a different button.</p>
+    <p>This task will test your ability to compare the sounds that computer buttons (on keyboards) make.</p>
     <p>Three audio clips of buttons being pressed will play one after another.</p>
     <p>Two audio clips will be from the same button and one will be from a 
         different button.</p>
@@ -172,21 +172,11 @@
     timeline.push({
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `
-    <p>You will hear three audio clips of buttons being clicked.</p>
-    <p>Two audio clips will come from the same button and one will come from a
-        different button.</p>
-    <p>The audio clips will not repeat.</p>
-    <p>After all three audio clips have been played, you will be asked which
-        audio clip came from a different button.</p>
-    <p>Press <b>${keys[0]}</b> if the first audio clip is from a different button</p>
-    <p>Press <b>${keys[1]}</b> if the second audio clip is from a different button</p>
-    <p>Press <b>${keys[2]}</b> if the third audio clip is from a different button</p>
-    <p>Respond as quickly and accurately as possible without
-    sacrificing accuracy.</p>
-    <p><b>These tests are designed to be hard at times. Take your time but if
-    you are not sure, take your best guess.</b></p>
-    <p>Press any key to continue.</p>
-  `,
+            <p>Respond using the key (<b>${keys[0]}</b> <b>${keys[1]}</b> or <b>${keys[2]}</b>) for the button that is DIFFERENT.</p>
+            <p><b>These tests are designed to be hard at times. Take your time but if
+            you are not sure, take your best guess.</b></p>
+            <p>Press any key to continue.</p>
+        `,
         post_trial_gap: 500
     });
 
@@ -238,18 +228,7 @@
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `
             <p>Good job! You are ready to start the test.</p>
-            <p><b>Remember:</b></p>
-            <p>You will hear three audio clips of buttons being clicked.</p>
-            <p>Two audio clips will come from the same button and one will come from a
-                different button.</p>
-            <p>The audio clips will not repeat.</p>
-            <p>After all three audio clips have been played, you will be asked which
-                audio clip came from a different button.</p>
-            <p>Press <b>${keys[0]}</b> if the first audio clip is from a different button</p>
-            <p>Press <b>${keys[1]}</b> if the second audio clip is from a different button</p>
-            <p>Press <b>${keys[2]}</b> if the third audio clip is from a different button</p>
-            <p>Respond as quickly and accurately as possible without
-            sacrificing accuracy.</p>
+            <p>Respond using the key (<b>${keys[0]}</b> <b>${keys[1]}</b> or <b>${keys[2]}</b>) for the button that is DIFFERENT.</p>
             <p><b>These tests are designed to be hard at times. Take your time but if
             you are not sure, take your best guess.</b></p>
             <p>Press any key to continue.</p>
