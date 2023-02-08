@@ -11,7 +11,7 @@
     <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.1"></script>
     <script src="https://unpkg.com/@jspsych/plugin-audio-keyboard-response@1.1.1"></script>
     <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.0.0"></script>
-    <script src="./trials_v1.js"></script>
+    <script src="./trials.js"></script>
 </head>
 
 <body></body>
@@ -88,7 +88,6 @@
                 CorrRes: keys[trial.CorrRes - 1],
                 Oddball: trial.Oddball,
                 Pair: trial.Pair,
-                Noise: trial.Noise
             },
             on_finish: function (data) {
                 data.Corr = jsPsych.pluginAPI.compareKeys(data.response, data.CorrRes)
@@ -209,8 +208,6 @@
         "CorrRes": 3,
         "Pair": "AliazG100g",
         "Oddball": "CherryBrown",
-        "Noise": "FALSE",
-        "Vary": "FALSE"
     }
     let pracTimeline = makeTest(pracTrial)
     pracTimeline.TestTrial = false
