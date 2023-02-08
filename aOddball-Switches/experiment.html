@@ -57,16 +57,25 @@
         // Add clips in nested timeline
         let trialTimeline = []
         for (let i = 0; i < 3; i++) {
-            let tmp = {
+            trialTimeline.push({
                 type: jsPsychAudioKeyboardResponse,
                 prompt: '<b>' + keys[i] + '</b>',
                 stimulus: "./stimuli/" + trial['Stim' + (i + 1)],
                 choices: 'NO_KEYS',
                 trial_ends_after_audio: true,
-                post_trial_gap: 250
-            }
+                post_trial_gap: 0
+            })
 
-            trialTimeline.push(tmp)
+            trialTimeline.push({
+                type: jsPsychAudioKeyboardResponse,
+                prompt: '--',
+                stimulus: "./stimuli/NoiseMask.mp3",
+                choices: 'NO_KEYS',
+                trial_ends_after_audio: true,
+                post_trial_gap: 250
+            })
+
+
         }
 
         // Add response
@@ -156,7 +165,7 @@
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `
     <p>This task will test your ability to compare the sounds that computer buttons (on keyboards) make.</p>
-    <p>Three audio clips of buttons being pressed will play one after another.</p>
+    <p>Three audio clips of buttons being pressed will play one after another with a distractor after each clip.</p>
     <p>Two audio clips will be from the same button and one will be from a 
         different button.</p>
     <p>You need to figure out which audio clip is the one from the different
@@ -172,7 +181,7 @@
     timeline.push({
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `
-            <p>Respond using the key (<b>${keys[0]}</b> <b>${keys[1]}</b> or <b>${keys[2]}</b>) for the button that is DIFFERENT.</p>
+            <p>Respond using the key (<b>${keys[0]}</b>, <b>${keys[1]}</b>, or <b>${keys[2]}</b>) for the button that is DIFFERENT.</p>
             <p><b>These tests are designed to be hard at times. Take your time but if
             you are not sure, take your best guess.</b></p>
             <p>Press any key to continue.</p>
@@ -202,11 +211,10 @@
     let pracTimeline = makeTest(pracTrial)
     pracTimeline.TestTrial = false
 
-    let pracFeedback = {
+    pracTimeline.push({
         type: jsPsychHtmlKeyboardResponse,
         stimulus: function () {
             let lastTrial = jsPsych.data.get().last(1).values()[0]
-            console.log(lastTrial)
             if (lastTrial.Corr) {
                 return 'Correct!'
             } else {
@@ -214,9 +222,9 @@
             }
         },
         trial_duration: 750
-    }
+    })
     timeline.push({
-        timeline: [pracTimeline, pracFeedback],
+        timeline: pracTimeline,
         loop_function: function (data) {
             let lastTrial = jsPsych.data.get().last(2).values()[0]
             return !lastTrial.Corr
@@ -238,7 +246,8 @@
 
     // Define trials
     for (let trial of trials) {
-        timeline.push(makeTest(trial))
+        let trialBits = makeTest(trial)
+        trialBits.forEach(bit => { timeline.push(bit) })
 
         // Add a next trial
         timeline.push({
