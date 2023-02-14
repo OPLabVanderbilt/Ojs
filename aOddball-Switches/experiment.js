@@ -1,6 +1,7 @@
 let chainLink = '' // Change this to link to another experiment/site at finish
-let maxAttentionFails = 10000
-let doAttentionChecks = false
+let maxAttentionFails = 0
+let doAttentionChecks = true
+const failLink = 'https://andrexia.com'
 let keys = ['f', 'g', 'h']
 
 let knockedOut = false
@@ -98,10 +99,10 @@ timeline.push({
     },
     exclusion_message: (data) => {
         return `
-    <p>You must use a desktop/laptop computer to participate in this
-    experiment.</p>
-    <p>Please restart the experiment on a desktop/laptop computer.</p>
-  `;
+            <p>You must use a desktop/laptop computer to participate in this
+            experiment.</p>
+            <p>Please restart the experiment on a desktop/laptop computer.</p>
+        `;
     }
 })
 
@@ -121,8 +122,8 @@ timeline.push({
 timeline.push({
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-<p>In this test, you will be listening to audio clips.</p>
-`,
+        <p>In this test, you will be listening to audio clips.</p>
+    `,
     choices: ['Begin'],
     post_trial_gap: 500
 });
@@ -146,17 +147,17 @@ timeline.push({
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
-<p>This task will test your ability to compare the sounds that computer buttons (on keyboards) make.</p>
-<p>Three audio clips of buttons being pressed will play one after another with a distractor after each clip.</p>
-<p>Two audio clips will be from the same button and one will be from a 
-    different button.</p>
-<p>You need to figure out which audio clip is the one from the different
-    button.</p>
-<p>The cadence of the button clicks may change but does not matter.</p>
-<p>The timbre, pitch, and clicking noises are relevant to differentiate
-buttons.</p>
-<p>Press any key to continue.</p>
-`,
+        <p>This task will test your ability to compare the sounds that computer buttons (on keyboards) make.</p>
+        <p>Three audio clips of buttons being pressed will play one after another with a distractor after each clip.</p>
+        <p>Two audio clips will be from the same button and one will be from a 
+            different button.</p>
+        <p>You need to figure out which audio clip is the one from the different
+            button.</p>
+        <p>The cadence of the button clicks may change but does not matter.</p>
+        <p>The timbre, pitch, and clicking noises are relevant to differentiate
+        buttons.</p>
+        <p>Press any key to continue.</p>
+    `,
     post_trial_gap: 500
 });
 
@@ -174,9 +175,9 @@ timeline.push({
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
-<p>We will start with a practice trial.</p>
-<p>Press any key to start.</p>
-`,
+        <p>We will start with a practice trial.</p>
+        <p>Press any key to start.</p>
+    `,
     post_trial_gap: 500
 });
 
@@ -228,6 +229,40 @@ timeline.push({
 
 // Define trials
 for (let trial of trials) {
+    if (doAttentionChecks && trial.TrialN == 50) {
+        let attnTrial = makeTest({
+            "TrialN": -1,
+            "Stim1": "Example2.mp3",
+            "Stim2": "Example2.mp3",
+            "Stim3": "Example2.mp3",
+            "CorrRes": 3,
+            "Pair": "AttentionCheck",
+            "Oddball": "AttentionCheck",
+        })
+
+        // Modify attention check
+        attnTrial[attnTrial.length - 1].stimulus = `
+            <p>This is an attention check. Press the p key.</p>
+            <p><b>${keys[0]}</b>-<b>${keys[1]}</b>-<b>${keys[2]}</b></p>
+        `
+        attnTrial[attnTrial.length - 1].choices = keys.concat('p')
+        attnTrial[attnTrial.length - 1].data.TestTrial = false
+        attnTrial[attnTrial.length - 1].data.AttentionTrial = true
+        attnTrial[attnTrial.length - 1].on_finish = function () {
+            fail = keys.includes(jsPsych.data.get().last(1).values()[0].response)
+            attentionFails += fail ? 1 : 0
+            if (attentionFails > maxAttentionFails && source == 'prolific') {
+                // Knock out prolific participants
+                knockedOut = true
+                jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                if (!failLink == '') {
+                    window.location = failLink
+                }
+            }
+        }
+        attnTrial.forEach(bit => { timeline.push(bit) })
+    }
+
     let trialBits = makeTest(trial)
     trialBits.forEach(bit => { timeline.push(bit) })
 
@@ -250,10 +285,10 @@ timeline.push({
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
-<p>You have finished this test, good job!</p>
-<p>One more test until you finish!</p>
-<p>Press any buttton to continue.</p>
-`,
+        <p>You have finished this test, good job!</p>
+        <p>One more test until you finish!</p>
+        <p>Press any buttton to continue.</p>
+    `,
 });
 
 // Run

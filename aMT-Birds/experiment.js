@@ -1,6 +1,7 @@
 let chainLink = ''
 let maxAttentionFails = 10000
 let doAttentionChecks = false
+const failLink = ''
 
 let knockedOut = false
 var jsPsych = initJsPsych({
@@ -49,10 +50,10 @@ function makeTest(trial) {
 
         // Check if it is the target
         if (i + 1 == trial.TargetLoc) {
-            tmp.stimulus = trial.Target
+            tmp.stimulus = "./stimuli/" + trial.Target
         } else {
             numFoils++
-            tmp.stimulus = trial['Foil' + numFoils]
+            tmp.stimulus = "./stimuli/" + trial['Foil' + numFoils]
         }
 
         // Continue if previous trial didn't have a response
@@ -91,10 +92,10 @@ timeline.push({
     },
     exclusion_message: (data) => {
         return `
-    <p>You must use a desktop/laptop computer to participate in this
-    experiment.</p>
-    <p>Please restart the experiment on a desktop/laptop computer.</p>
-  `;
+            <p>You must use a desktop/laptop computer to participate in this
+            experiment.</p>
+            <p>Please restart the experiment on a desktop/laptop computer.</p>
+        `;
     }
 })
 
@@ -114,8 +115,8 @@ timeline.push({
 timeline.push({
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-<p>In this test, you will be listening to audio clips.</p>
-`,
+        <p>In this test, you will be listening to audio clips.</p>
+    `,
     choices: ['Begin'],
     post_trial_gap: 500
 });
@@ -124,7 +125,7 @@ timeline.push({
 let audioCheck = {
     type: jsPsychAudioKeyboardResponse,
     prompt: 'Please adjust your audio volume, it should be quiet but audible. Follow the spoken instructions.',
-    stimulus: 'SoundCheck.mp3',
+    stimulus: './stimuli/SoundCheck.mp3',
     choices: '5',
     trial_ends_after_audio: true,
     post_trial_gap: 250
@@ -139,32 +140,32 @@ timeline.push({
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
-<p>This task will test your memory of bird songs.</p>
-<p>We will start with birdsongs from a single species that you
-will have to remember.</p>
-<p>First, you will be presented with a single bird song, remember
-it closely.</p>
-<p>Press any key to continue.</p>
-`,
+        <p>This task will test your memory of bird songs.</p>
+        <p>We will start with birdsongs from a single species that you
+        will have to remember.</p>
+        <p>First, you will be presented with a single bird song, remember
+        it closely.</p>
+        <p>Press any key to continue.</p>
+    `,
     post_trial_gap: 500
 });
 
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
-<p>Afterwards, we will test if you can recognize it against two
-other similar bird songs from other species.</p>
-<p>Press <b>f</b> if the first clip is the bird song you remembered</p>
-<p>Press <b>g</b> if the second clip is the bird song you remembered</p>
-<p>Press <b>h</b> if the third clip is the bird song you remembered</p>
-<p>Clips will play one after another and repeat after the third, you can
-respond during any clip.</p>
-<p>Respond as quickly and accurately as possible without
-sacrificing accuracy.</p>
-<p><b>These tests are designed to be hard at times. Take your time but if
-you are not sure, take your best guess.</b></p>
-<p>Press any key to continue.</p>
-`,
+        <p>Afterwards, we will test if you can recognize it against two
+        other similar bird songs from other species.</p>
+        <p>Press <b>f</b> if the first clip is the bird song you remembered</p>
+        <p>Press <b>g</b> if the second clip is the bird song you remembered</p>
+        <p>Press <b>h</b> if the third clip is the bird song you remembered</p>
+        <p>Clips will play one after another and repeat after the third, you can
+        respond during any clip.</p>
+        <p>Respond as quickly and accurately as possible without
+        sacrificing accuracy.</p>
+        <p><b>These tests are designed to be hard at times. Take your time but if
+        you are not sure, take your best guess.</b></p>
+        <p>Press any key to continue.</p>
+    `,
     post_trial_gap: 500
 });
 
@@ -178,14 +179,13 @@ for (let trial of trials.slice(0, 18)) {
         let target = trial.Target
         target = target.replace(' SHORT', '')
         target = target.slice(0, target.indexOf('.') - 1).trim()
-        console.log(target)
 
         // Learning clip
         timeline.push({
             type: jsPsychAudioKeyboardResponse,
             prompt: 'Bird species ' + speciesN,
             choices: 'NO_KEYS',
-            stimulus: target + ' Repeating.mp3',
+            stimulus: "./stimuli/" + target + ' Repeating.mp3',
             trial_ends_after_audio: true,
             post_trial_gap: 250
         })
@@ -204,11 +204,11 @@ for (let trial of trials.slice(0, 18)) {
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
-<p>Now, we will review all six target bird species.</p>
-<p>You will be tested on all of them together afterwards.</p>
-<p>Each bird species will be presented once.</p>
-<p>Press any key to continue.</p>
-`,
+        <p>Now, we will review all six target bird species.</p>
+        <p>You will be tested on all of them together afterwards.</p>
+        <p>Each bird species will be presented once.</p>
+        <p>Press any key to continue.</p>
+    `,
     post_trial_gap: 500
 });
 
@@ -226,7 +226,7 @@ for (let i = 0; i < studyClips.length; i++) {
         type: jsPsychAudioKeyboardResponse,
         prompt: 'Bird species ' + (i + 1),
         choices: 'NO_KEYS',
-        stimulus: studyClips[i],
+        stimulus: "./stimuli/" + studyClips[i],
         trial_ends_after_audio: true,
         post_trial_gap: 250
     })
@@ -235,17 +235,17 @@ for (let i = 0; i < studyClips.length; i++) {
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
-<p>Now, you will be tested on which bird species you remember.</p>
-<p>Within each set of three bird song clips, one of them will be from the six you studied</p>
-<p>Press <b>f</b> if the first clip is the bird song you remembered</p>
-<p>Press <b>g</b> if the second clip is the bird song you remembered</p>
-<p>Press <b>h</b> if the third clip is the bird song you remembered</p>
-<p>Clips will play one after another and repeat after the third, you can
-respond during any clip.</p>
-<p>Respond as quickly and accurately as possible without
-sacrificing accuracy.</p>
-<p>Press any key to continue.</p>
-`,
+        <p>Now, you will be tested on which bird species you remember.</p>
+        <p>Within each set of three bird song clips, one of them will be from the six you studied</p>
+        <p>Press <b>f</b> if the first clip is the bird song you remembered</p>
+        <p>Press <b>g</b> if the second clip is the bird song you remembered</p>
+        <p>Press <b>h</b> if the third clip is the bird song you remembered</p>
+        <p>Clips will play one after another and repeat after the third, you can
+        respond during any clip.</p>
+        <p>Respond as quickly and accurately as possible without
+        sacrificing accuracy.</p>
+        <p>Press any key to continue.</p>
+    `,
     post_trial_gap: 500
 })
 
@@ -253,7 +253,7 @@ for (let trial of trials.slice(18)) {
     if (doAttentionChecks && trial.TrialNum == 25) {
         timeline.push({
             type: jsPsychAudioKeyboardResponse,
-            stimulus: 'AttentionCheck1.mp3',
+            stimulus: './stimuli/AttentionCheck1.mp3',
             prompt: '<b>' + keys[0] + '</b>',
             choices: keys,
             trial_ends_after_audio: true,
@@ -263,7 +263,7 @@ for (let trial of trials.slice(18)) {
 
         timeline.push({
             type: jsPsychAudioKeyboardResponse,
-            stimulus: 'AttentionCheck2.mp3',
+            stimulus: './stimuli/AttentionCheck2.mp3',
             prompt: '<b>' + keys[1] + '</b>',
             choices: keys,
             trial_ends_after_audio: true,
@@ -274,7 +274,7 @@ for (let trial of trials.slice(18)) {
 
         attentionCheck = {
             type: jsPsychAudioKeyboardResponse,
-            stimulus: 'AttentionCheck3.mp3',
+            stimulus: './stimuli/AttentionCheck3.mp3',
             prompt: '<b>' + keys[2] + '</b>',
             choices: keys.concat('m'),
             trial_ends_after_audio: true,
@@ -293,7 +293,9 @@ for (let trial of trials.slice(18)) {
                     // Knock out prolific participants
                     knockedOut = true
                     jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
-                    //window.location = "https://andrexia.com"
+                    if (!failLink == '') {
+                        window.location = failLink
+                    }
                 }
             }
         })
@@ -320,10 +322,10 @@ timeline.push({
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
-<p>You have finished this test, good job!</p>
-<p>One more test until you finish!</p>
-<p>Press any buttton to continue.</p>
-`,
+        <p>You have finished this test, good job!</p>
+        <p>One more test until you finish!</p>
+        <p>Press any buttton to continue.</p>
+    `,
 });
 
 // Run

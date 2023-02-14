@@ -1,8 +1,9 @@
 const keys = ['f', 'j']
 
 let chainLink = ''
-let maxAttentionFails = 10000
-let doAttentionChecks = false
+let maxAttentionFails = 0
+let doAttentionChecks = true
+const failLink = ''
 
 let knockedOut = false
 let jsPsych = initJsPsych({
@@ -164,10 +165,10 @@ timeline.push({
 })
 
 // Enter full screen
-// timeline.push({
-//     type: jsPsychFullscreen,
-//     fullscreen_mode: true
-// })
+timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: true
+})
 
 // Preload
 timeline.push({
@@ -225,9 +226,59 @@ timeline.push({
 })
 
 for (trial of trials) {
+    if (doAttentionChecks && trial.TrialN == 5) {
+        let attnTrial = makeTrial({
+            "Target": "Attention1.wav",
+            "Choice1": "Attention2.wav",
+            "Choice2": "Attention3.wav",
+            "CorrRes": 1,
+            "DiffScore": -10000000,
+            "source": "AttentionCheck",
+            "TrialN": -1
+        })
+
+        console.log(attnTrial)
+        // Modify attention check
+        attnTrial[attnTrial.length - 1].stimulus = `
+            <p>Option 1 (${keys[0]}) ------------------ Option 2 (${keys[1]})</p>
+            <p>Press the b key.</p>
+        `
+        attnTrial[attnTrial.length - 1].choices = keys.concat('b')
+        attnTrial[attnTrial.length - 1].data.TestTrial = false
+        attnTrial[attnTrial.length - 1].data.AttentionTrial = true
+        attnTrial[attnTrial.length - 1].on_finish = function () {
+            fail = keys.includes(jsPsych.data.get().last(1).values()[0].response)
+            attentionFails += fail ? 1 : 0
+            if (attentionFails > maxAttentionFails && source == 'prolific') {
+                // Knock out prolific participants
+                knockedOut = true
+                jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                if (!failLink == '') {
+                    window.location = failLink
+                }
+            }
+        }
+        attnTrial.forEach(bit => { timeline.push(bit) })
+    }
+
     trialSlides = makeTrial(trial)
     timeline.push(...trialSlides)
 }
+
+// Exit fullscreen
+timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: false
+})
+
+// End card
+timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+        <p>You have finished this test, good job!</p>
+        <p>Press any buttton to continue.</p>
+    `,
+});
 
 // Run
 jsPsych.run(timeline);
