@@ -233,7 +233,7 @@ for (let trial of trials) {
         let attnTrial = makeTest({
             "TrialN": -1,
             "Stim1": "Example2.mp3",
-            "Stim2": "Example2.mp3",
+            "Stim2": "Attention.mp3",
             "Stim3": "Example2.mp3",
             "CorrRes": 3,
             "Pair": "AttentionCheck",
