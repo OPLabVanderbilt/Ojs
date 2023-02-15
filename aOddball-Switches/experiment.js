@@ -2,6 +2,7 @@ let chainLink = '' // Change this to link to another experiment/site at finish
 let maxAttentionFails = 0
 let doAttentionChecks = true
 const failLink = 'https://andrexia.com'
+const timeoutLink = ''
 let keys = ['f', 'g', 'h']
 
 let knockedOut = false
@@ -35,6 +36,20 @@ let source = jsPsych.data.getURLVariable('src')
 if (source === undefined) {
     source = 'unknown'
 }
+
+// Get time since start
+let expTime = Number(jsPsych.data.getURLVariable('time'))
+if (isNaN(expTime)) {
+    expTime = 0
+}
+
+jsPsych.data.addProperties({
+    SbjID: sbjID,
+    Study: study,
+    Source: source,
+    ExpTime: expTime,
+    StartTime: Date.now()
+})
 
 function makeTest(trial) {
     // Add clips in nested timeline
@@ -72,7 +87,6 @@ function makeTest(trial) {
         post_trial_gap: 250,
         data: {
             TestTrial: true,
-            SbjID: sbjID,
             TrialN: trial.TrialN,
             Stim1: trial.Stim1,
             Stim2: trial.Stim2,
@@ -84,6 +98,14 @@ function makeTest(trial) {
         on_finish: function (data) {
             data.Corr = jsPsych.pluginAPI.compareKeys(data.response, data.CorrRes)
             data.attentionFails = attentionFails
+
+            data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+            if (data.TimeSinceStart + data.ExpTime > 60 * 60) {
+                jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                if (!timeoutLink == '') {
+                    window.location = timeoutLink
+                }
+            }
         }
     })
 
