@@ -2,15 +2,20 @@ let chainLink = '' // Change this to link to another experiment/site at finish
 let maxAttentionFails = 1000
 let doAttentionChecks = true
 const failLink = ''
-const timeoutLink = ''
-const timeoutMin = 50
+const timeoutLink = 'https://andrexia.com/timeout'
+const timeoutMin = 1
 let keys = ['f', 'g', 'h']
 
 let knockedOut = false
+let timedOut = false
 var jsPsych = initJsPsych({
     on_finish: function () {
         if (!chainLink == '' && !knockedOut) {
             window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study
+        } else if (!failLink == '' && knockedOut) {
+            window.location = failLink
+        } else if (!timeoutLink == '' && timedOut) {
+            window.location = timeoutLink
         }
     }
 });
@@ -99,13 +104,13 @@ function makeTest(trial) {
         on_finish: function (data) {
             data.Corr = jsPsych.pluginAPI.compareKeys(data.response, data.CorrRes)
             data.attentionFails = attentionFails
+            data.KnockedOut = knockedOut
+            data.TimedOut = timedOut
 
             data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
             if (data.TimeSinceStart + data.ExpTime > 60 * timeoutMin) {
-                jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
-                if (!timeoutLink == '') {
-                    window.location = timeoutLink
-                }
+                timedOut = true
+                jsPsych.endExperiment('The experiment was ended due to taking too long.')
             }
         }
     })
@@ -280,10 +285,9 @@ for (let trial of trials) {
             if (attentionFails > maxAttentionFails && source == 'prolific') {
                 // Knock out prolific participants
                 knockedOut = true
+                data.KnockedOut = true
+                data.timedOut = false
                 jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
-                if (!failLink == '') {
-                    window.location = failLink
-                }
             }
         }
         attnTrial.forEach(bit => { timeline.push(bit) })
