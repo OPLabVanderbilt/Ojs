@@ -3,13 +3,20 @@ const keys = ['f', 'j']
 let chainLink = ''
 let maxAttentionFails = 0
 let doAttentionChecks = true
-const failLink = ''
+const failLink = 'https://andrexia.com/fail'
+const timeoutLink = 'https://andrexia.com/timeout'
+const timeoutMin = 1000
 
 let knockedOut = false
+let timedOut = false
 let jsPsych = initJsPsych({
     on_finish: function () {
-        if (!chainLink == '' && !knockedOut) {
-            window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study
+        if (!chainLink == '' && !knockedOut && !timedOut) {
+            window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study + '&time=' + expTime
+        } else if (!failLink == '' && knockedOut) {
+            window.location = failLink
+        } else if (!timeoutLink == '' && timedOut) {
+            window.location = timeoutLink
         }
     }
 })
@@ -36,6 +43,20 @@ let source = jsPsych.data.getURLVariable('src')
 if (source === undefined) {
     source = 'unknown'
 }
+
+// Get time since start
+let expTime = Number(jsPsych.data.getURLVariable('time'))
+if (isNaN(expTime)) {
+    expTime = 0
+}
+
+jsPsych.data.addProperties({
+    SbjID: sbjID,
+    Study: study,
+    Source: source,
+    ExpTime: expTime,
+    StartTime: Date.now()
+})
 
 function makeTrial(trial, feedback = false) {
     // Add trials to nested timeline
@@ -110,7 +131,6 @@ function makeTrial(trial, feedback = false) {
         post_trial_gap: 250,
         data: {
             TestTrial: true,
-            SbjID: sbjID,
             TrialN: trial.TrialN,
             Target: trial.Target,
             Choice1: trial.Choice1,
@@ -121,6 +141,15 @@ function makeTrial(trial, feedback = false) {
         on_finish: function (data) {
             data.Correct = jsPsych.pluginAPI.compareKeys(data.response, keys[trial.CorrRes - 1])
             data.attentionFails = attentionFails
+
+            data.KnockedOut = knockedOut
+            data.TimedOut = timedOut
+
+            data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+            if (data.TimeSinceStart + data.ExpTime > 60 * timeoutMin) {
+                timedOut = true
+                jsPsych.endExperiment('The experiment was ended due to taking too long.')
+            }
         }
     })
 
@@ -221,6 +250,7 @@ timeline.push({
     <p>If the first test clip is the same person as the target, press the <b>${keys[0]}</b> key.</p>
     <p>If the second test clip is the same person as the target, press the <b>${keys[1]}</b> key.</p>
     <p>Take your time as these trials are designed to be hard sometimes. If you're not sure, just make your best guess.</p>
+    <p>Some laughs may be genuine, others may be posed, this doesn't matter, focus on the person laughing.</p>
     <p>Press any key to continue.</p>
   `,
     post_trial_gap: 500
@@ -252,13 +282,14 @@ for (trial of trials) {
             attentionFails += fail ? 1 : 0
             data.success = !fail
             data.attentionFails = attentionFails
+            data.KnockedOut = knockedOut
+            data.TimedOut = timedOut
             if (attentionFails > maxAttentionFails && source == 'prolific') {
                 // Knock out prolific participants
                 knockedOut = true
+                data.KnockedOut = true
+                data.TimedOut = false
                 jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
-                if (!failLink == '') {
-                    window.location = failLink
-                }
             }
         }
         attnTrial.forEach(bit => { timeline.push(bit) })
