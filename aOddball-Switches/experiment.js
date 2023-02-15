@@ -83,6 +83,7 @@ function makeTest(trial) {
         },
         on_finish: function (data) {
             data.Corr = jsPsych.pluginAPI.compareKeys(data.response, data.CorrRes)
+            data.attentionFails = attentionFails
         }
     })
 
@@ -252,7 +253,7 @@ for (let trial of trials) {
             fail = keys.includes(jsPsych.data.get().last(1).values()[0].response)
             attentionFails += fail ? 1 : 0
             data.success = !fail
-            console.log(data)
+            data.attentionFails = attentionFails
             if (attentionFails > maxAttentionFails && source == 'prolific') {
                 // Knock out prolific participants
                 knockedOut = true

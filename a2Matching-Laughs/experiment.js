@@ -120,6 +120,7 @@ function makeTrial(trial, feedback = false) {
         },
         on_finish: function (data) {
             data.Correct = jsPsych.pluginAPI.compareKeys(data.response, keys[trial.CorrRes - 1])
+            data.attentionFails = attentionFails
         }
     })
 
@@ -246,9 +247,11 @@ for (trial of trials) {
         attnTrial[attnTrial.length - 1].choices = keys.concat('b')
         attnTrial[attnTrial.length - 1].data.TestTrial = false
         attnTrial[attnTrial.length - 1].data.AttentionTrial = true
-        attnTrial[attnTrial.length - 1].on_finish = function () {
+        attnTrial[attnTrial.length - 1].on_finish = function (data) {
             fail = keys.includes(jsPsych.data.get().last(1).values()[0].response)
             attentionFails += fail ? 1 : 0
+            data.success = !fail
+            data.attentionFails = attentionFails
             if (attentionFails > maxAttentionFails && source == 'prolific') {
                 // Knock out prolific participants
                 knockedOut = true
