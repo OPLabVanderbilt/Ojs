@@ -2,12 +2,19 @@ let chainLink = ''
 let maxAttentionFails = 10000
 let doAttentionChecks = false
 const failLink = ''
+const timeoutLink = 'https://andrexia.com/timeout'
+const timeoutMin = 1000
 
 let knockedOut = false
+let timedOut = false
 var jsPsych = initJsPsych({
     on_finish: function () {
-        if (!chainLink == '' && !knockedOut) {
-            window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study
+        if (!chainLink == '' && !knockedOut && !timedOut) {
+            window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study + '&time=' + expTime
+        } else if (!failLink == '' && knockedOut) {
+            window.location = failLink
+        } else if (!timeoutLink == '' && timedOut) {
+            window.location = timeoutLink
         }
     }
 });
@@ -35,6 +42,20 @@ if (source === undefined) {
     source = 'unknown'
 }
 
+// Get time since start
+let expTime = Number(jsPsych.data.getURLVariable('time'))
+if (isNaN(expTime)) {
+    expTime = 0
+}
+
+jsPsych.data.addProperties({
+    SbjID: sbjID,
+    Study: study,
+    Source: source,
+    ExpTime: expTime,
+    StartTime: Date.now()
+})
+
 function makeTest(trial) {
     // Add clips in nested timeline
     let trialTimeline = []
@@ -43,7 +64,7 @@ function makeTest(trial) {
         let tmp = {
             type: jsPsychAudioKeyboardResponse,
             prompt: '<b>' + keys[i] + '</b>',
-            choices: keys,
+            choices: 'NO_KEYS',
             trial_ends_after_audio: true,
             post_trial_gap: 250
         }
@@ -56,30 +77,38 @@ function makeTest(trial) {
             tmp.stimulus = "./stimuli/" + trial['Foil' + numFoils]
         }
 
-        // Continue if previous trial didn't have a response
-        if (i > 0) {
-            tmp = {
-                timeline: [tmp],
-                conditional_function: d => !jsPsych.data.get().last(1).values()[0].response
-            }
-        }
-
         trialTimeline.push(tmp)
     }
 
-    return {
-        timeline: trialTimeline,
-        loop_function: d => !d.values().filter(d => d.response).length,
+    trialTimeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+            <p>Which bird was the target?</p>
+            <p>Press <b>${keys[0]}</b> for the first bird, <b>${keys[1]}</b> for the second bird, or <b>${keys[2]}</b> for the third bird.</p>
+        `,
+        choices: keys,
         data: {
             testTrial: true,
-            sbjID: sbjID,
             trialN: trial.TrialNum,
             target: trial.Target,
             foil1: trial.Foil1,
             foil2: trial.Foil2,
             corrRes: keys[trial.TargetLoc - 1]
+        },
+        on_finish: function (data) {
+            data.attentionFails = attentionFails
+            data.KnockedOut = knockedOut
+            data.TimedOut = timedOut
+
+            data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+            if (data.TimeSinceStart + data.ExpTime > 60 * timeoutMin) {
+                timedOut = true
+                jsPsych.endExperiment('The experiment was ended due to taking too long.')
+            }
         }
-    }
+    })
+
+    return trialTimeline
 }
 
 // Timeline
@@ -155,13 +184,10 @@ timeline.push({
     stimulus: `
         <p>Afterwards, we will test if you can recognize it against two
         other similar bird songs from other species.</p>
+        <p>After all three options have been played, pick which clip is the bird song you remembered</p>
         <p>Press <b>f</b> if the first clip is the bird song you remembered</p>
         <p>Press <b>g</b> if the second clip is the bird song you remembered</p>
         <p>Press <b>h</b> if the third clip is the bird song you remembered</p>
-        <p>Clips will play one after another and repeat after the third, you can
-        respond during any clip.</p>
-        <p>Respond as quickly and accurately as possible without
-        sacrificing accuracy.</p>
         <p><b>These tests are designed to be hard at times. Take your time but if
         you are not sure, take your best guess.</b></p>
         <p>Press any key to continue.</p>
@@ -191,7 +217,9 @@ for (let trial of trials.slice(0, 18)) {
         })
     }
 
-    timeline.push(makeTest(trial))
+    for (trial of makeTest(trial)) {
+        timeline.push(trial)
+    }
 
     // Add a next trial
     timeline.push({
@@ -236,14 +264,12 @@ timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
         <p>Now, you will be tested on which bird species you remember.</p>
-        <p>Within each set of three bird song clips, one of them will be from the six you studied</p>
+        <p>After all three options have been played, pick which clip is a bird song you remembered</p>
         <p>Press <b>f</b> if the first clip is the bird song you remembered</p>
         <p>Press <b>g</b> if the second clip is the bird song you remembered</p>
         <p>Press <b>h</b> if the third clip is the bird song you remembered</p>
-        <p>Clips will play one after another and repeat after the third, you can
-        respond during any clip.</p>
-        <p>Respond as quickly and accurately as possible without
-        sacrificing accuracy.</p>
+        <p><b>These tests are designed to be hard at times. Take your time but if
+        you are not sure, take your best guess.</b></p>
         <p>Press any key to continue.</p>
     `,
     post_trial_gap: 500
@@ -292,16 +318,17 @@ for (let trial of trials.slice(18)) {
                 if (attentionFails > maxAttentionFails && source == 'prolific') {
                     // Knock out prolific participants
                     knockedOut = true
+                    data.KnockedOut = true
+                    data.TimedOut = false
                     jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
-                    if (!failLink == '') {
-                        window.location = failLink
-                    }
                 }
             }
         })
     }
 
-    timeline.push(makeTest(trial))
+    for (trial of makeTest(trial)) {
+        timeline.push(trial)
+    }
 
     // Add a next trial
     timeline.push({
