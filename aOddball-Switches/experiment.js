@@ -10,7 +10,7 @@ let knockedOut = false
 let timedOut = false
 var jsPsych = initJsPsych({
     on_finish: function () {
-        if (!chainLink == '' && !knockedOut) {
+        if (!chainLink == '' && !knockedOut && !timedOut) {
             window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study
         } else if (!failLink == '' && knockedOut) {
             window.location = failLink
