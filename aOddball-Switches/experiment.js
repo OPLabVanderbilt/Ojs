@@ -316,7 +316,6 @@ timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
         <p>You have finished this test, good job!</p>
-        <p>One more test until you finish!</p>
         <p>Press any buttton to continue.</p>
     `,
 });
