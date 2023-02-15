@@ -1,11 +1,11 @@
 const keys = ['f', 'j']
 
 let chainLink = ''
-let maxAttentionFails = 0
+let maxAttentionFails = 10000
 let doAttentionChecks = true
 const failLink = 'https://andrexia.com/fail'
 const timeoutLink = 'https://andrexia.com/timeout'
-const timeoutMin = 1000
+const timeoutMin = 10000
 
 let knockedOut = false
 let timedOut = false
@@ -146,8 +146,10 @@ function makeTrial(trial, feedback = false) {
             data.TimedOut = timedOut
 
             data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+            console.log(data)
             if (data.TimeSinceStart + data.ExpTime > 60 * timeoutMin) {
                 timedOut = true
+                data.TimedOut = true
                 jsPsych.endExperiment('The experiment was ended due to taking too long.')
             }
         }
@@ -268,7 +270,6 @@ for (trial of trials) {
             "TrialN": -1
         })
 
-        console.log(attnTrial)
         // Modify attention check
         attnTrial[attnTrial.length - 1].stimulus = `
             <p>Option 1 (${keys[0]}) ------------------ Option 2 (${keys[1]})</p>
