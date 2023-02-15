@@ -1,8 +1,9 @@
 let chainLink = '' // Change this to link to another experiment/site at finish
-let maxAttentionFails = 0
+let maxAttentionFails = 1000
 let doAttentionChecks = true
-const failLink = 'https://andrexia.com'
+const failLink = ''
 const timeoutLink = ''
+const timeoutMin = 50
 let keys = ['f', 'g', 'h']
 
 let knockedOut = false
@@ -100,7 +101,7 @@ function makeTest(trial) {
             data.attentionFails = attentionFails
 
             data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
-            if (data.TimeSinceStart + data.ExpTime > 60 * 60) {
+            if (data.TimeSinceStart + data.ExpTime > 60 * timeoutMin) {
                 jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
                 if (!timeoutLink == '') {
                     window.location = timeoutLink
