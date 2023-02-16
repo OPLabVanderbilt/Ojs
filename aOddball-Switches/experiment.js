@@ -221,7 +221,7 @@ const pracTrial = {
     "Oddball": "CherryBrown",
 }
 let pracTimeline = makeTest(pracTrial)
-pracTimeline.TestTrial = false
+pracTimeline[pracTimeline.length - 1 ].TestTrial = false
 
 pracTimeline.push({
     type: jsPsychHtmlKeyboardResponse,
