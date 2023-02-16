@@ -212,7 +212,7 @@ timeline.push({
 
 // Practice trial
 const pracTrial = {
-    "TrialN": 1,
+    "TrialN": -1,
     "Stim1": "Aliaz100g1.mp3",
     "Stim2": "Aliaz100g3.mp3",
     "Stim3": "CherryBrown1.mp3",
