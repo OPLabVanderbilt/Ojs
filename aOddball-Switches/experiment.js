@@ -109,8 +109,9 @@ function makeTest(trial) {
             data.TimedOut = timedOut
 
             data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
-            data.expTime = data.TimeSinceStart + data.OrigTime
-            if (data.expTime > 60 * timeoutMin) {
+            data.ExpTime = data.TimeSinceStart + data.OrigTime
+            expTime = data.ExpTime
+            if (data.ExpTime > 60 * timeoutMin) {
                 timedOut = true
                 jsPsych.endExperiment('The experiment was ended due to taking too long.')
             }

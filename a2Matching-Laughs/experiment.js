@@ -148,7 +148,7 @@ function makeTrial(trial, feedback = false) {
 
             data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
             data.ExpTime = data.TimeSinceStart + data.OrigTime
-
+            expTime = data.ExpTime
             if (data.ExpTime > 60 * timeoutMin) {
                 timedOut = true
                 data.TimedOut = true
