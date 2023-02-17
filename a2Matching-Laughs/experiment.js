@@ -12,7 +12,7 @@ let timedOut = false
 let jsPsych = initJsPsych({
     on_finish: function () {
         if (!chainLink == '' && !knockedOut && !timedOut) {
-            window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study + '&time=' + expTime
+            window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study + '&time=' + Math.round(expTime)
         } else if (!failLink == '' && knockedOut) {
             window.location = failLink
         } else if (!timeoutLink == '' && timedOut) {
@@ -45,16 +45,17 @@ if (source === undefined) {
 }
 
 // Get time since start
-let expTime = Number(jsPsych.data.getURLVariable('time'))
-if (isNaN(expTime)) {
-    expTime = 0
+let origTime = Number(jsPsych.data.getURLVariable('time'))
+if (isNaN(origTime)) {
+    origTime = 0
 }
+let expTime = origTime
 
 jsPsych.data.addProperties({
     SbjID: sbjID,
     Study: study,
     Source: source,
-    ExpTime: expTime,
+    OrigTime: origTime,
     StartTime: Date.now()
 })
 
@@ -146,8 +147,9 @@ function makeTrial(trial, feedback = false) {
             data.TimedOut = timedOut
 
             data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
-            console.log(data)
-            if (data.TimeSinceStart + data.ExpTime > 60 * timeoutMin) {
+            data.ExpTime = data.TimeSinceStart + data.OrigTime
+
+            if (data.ExpTime > 60 * timeoutMin) {
                 timedOut = true
                 data.TimedOut = true
                 jsPsych.endExperiment('The experiment was ended due to taking too long.')
