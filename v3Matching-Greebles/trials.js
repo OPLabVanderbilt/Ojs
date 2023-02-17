@@ -133,7 +133,7 @@ const trials = [
     },
     {
         "Trial": 23,
-        "CorrRes": 2,
+        "CorrRes": 3,
         "Duration": 500,
         "Feedback": false
     },
