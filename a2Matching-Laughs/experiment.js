@@ -136,9 +136,7 @@ function makeTrial(trial, feedback = false) {
             Target: trial.Target,
             Choice1: trial.Choice1,
             Choice2: trial.Choice2,
-            CorrRes: keys[trial.CorrRes - 1],
-            Diff: trial.MeanPerf,
-            Cor: trial.Cor
+            CorrRes: keys[trial.CorrRes - 1]
 
         },
         on_finish: function (data) {
