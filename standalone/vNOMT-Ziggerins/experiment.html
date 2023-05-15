@@ -19,6 +19,7 @@
   const keys = ['g', 'h', 'j']
   const ITI = 500
   const doAttentionCheck = true
+  const studyTime = 20000 // Set to null to allow infinite study time
 
   var jsPsych = initJsPsych({
     on_finish: function () {
@@ -97,10 +98,17 @@
 
   for (let trial of trials) {
     if (trial.Trial == 1 || trial.Trial == 7) {
+      let prompt = studyTime ?
+        `</br>These six objects are your TARGETS. Study them for ${studyTime / 1000} seconds.` :
+        `</br>These six objects are your TARGETS. Study them for as long as you like</br>
+          Press the spacebar when you are ready to start.`
+
       timeline.push({
         type: jsPsychImageKeyboardResponse,
         stimulus: './stimuli/Ziggerins_study1.jpg',
-        choices: [' '],
+        choices: studyTime ? 'NO_KEYS' : [' '],
+        prompt: prompt,
+        trial_duration: studyTime,
         post_trial_gap: ITI
       })
     } else if (trial.Trial == 25) {
@@ -111,10 +119,18 @@
         post_trial_gap: ITI
       })
 
+      let prompt2 = studyTime ?
+        `</br>Study the targets for ${studyTime / 1000} seconds.</br>
+          In the next block, the targets will be presented in a <b><u>different viewpoint.</u></b>` :
+        `</br>Study the targets for as long as you like.</br>
+          In the next block, the targets will be presented in a <b><u>different viewpoint.</u></b></br>
+          Press the spacebar when you are ready to start.`
       timeline.push({
         type: jsPsychImageKeyboardResponse,
-        stimulus: './stimuli/Ziggerins_study2.jpg',
-        choices: [' '],
+        stimulus: './stimuli/Ziggerins_study1.jpg',
+        choices: studyTime ? "NO_KEYS" : [' '],
+        prompt: prompt2,
+        trial_duration: studyTime,
         post_trial_gap: ITI
       })
     } else if (doAttentionCheck && trial.Trial == 30) {
