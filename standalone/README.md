@@ -19,5 +19,7 @@ file with a text editor.
 Other forms of object recognition ability tests is available in the root of 
 this repository.
 
+You can read our paper on the development, validation, and use of these tests here: https://psyarxiv.com/bmyan/.
+
 If you use any of these tests, please cite the following paper:
-Smithson, C.J.R., Chow, J.K., Chang, T.Y., Gauthier. I. (2022). *Measuring Object Recognition Ability: Reliability, Validity and the Aggregate z-score Approach.* Manuscript in preparation.
+Smithson, C., Chow, J. K., Chang, T., & Gauthier, I. (2023). Measuring object recognition ability: reliability, validity, and the aggregate z-score approach. [Manuscript submitted for publication]. https://doi.org/10.31234/osf.io/bmyan
