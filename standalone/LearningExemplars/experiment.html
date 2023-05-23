@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>vNOMT-Ziggerins</title>
+  <title>LearningExemplars</title>
   <script src="./jspsych/jspsych.js"></script>
   <link href="./jspsych/jspsych.css" rel="stylesheet" type="text/css" />
   <script src="./jspsych/plugin-preload.js"></script>
@@ -24,7 +24,7 @@
   var jsPsych = initJsPsych({
     on_finish: function () {
       let timestamp = new Date().toISOString()
-      jsPsych.data.get().localSave('csv', `${sbjID}_vNOMT-Ziggerins_${timestamp}.csv`)
+      jsPsych.data.get().localSave('csv', `${sbjID}_LearningExemplars_${timestamp}.csv`)
     }
   });
 

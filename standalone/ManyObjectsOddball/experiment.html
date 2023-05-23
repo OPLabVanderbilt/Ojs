@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Oddball - Many</title>
+    <title>ManyObjectsOddball</title>
     <script src="./jspsych/jspsych.js"></script>
     <link href="./jspsych/jspsych.css" rel="stylesheet" type="text/css" />
     <script src="./jspsych/plugin-preload.js"></script>
@@ -22,7 +22,7 @@
         default_iti: ITI,
         on_finish: function () {
             let timestamp = new Date().toISOString()
-            jsPsych.data.get().localSave('csv', `${sbjID}_vOddball-Many_${timestamp}.csv`)
+            jsPsych.data.get().localSave('csv', `${sbjID}_ManyObjectsOddball_${timestamp}.csv`)
         }
     });
 

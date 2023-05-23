@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>v3Matching - Greebles</title>
+    <title>3AFCMatching</title>
     <script src="./jspsych/jspsych.js"></script>
     <link href="./jspsych/jspsych.css" rel="stylesheet" type="text/css" />
     <script src="./jspsych/plugin-preload.js"></script>
@@ -24,7 +24,7 @@
         default_iti: ITI,
         on_finish: function () {
             let timestamp = new Date().toISOString()
-            jsPsych.data.get().localSave('csv', `${sbjID}_v3Matching-Greebles_${timestamp}.csv`)
+            jsPsych.data.get().localSave('csv', `${sbjID}_3AFCMatching_${timestamp}.csv`)
         }
     });
 
