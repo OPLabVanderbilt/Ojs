@@ -2,13 +2,14 @@
 <html>
 
 <head>
-    <title>Oddball - Many</title>
+    <title>3AFC Matching</title>
     <script src="https://unpkg.com/jspsych@7.2.1"></script>
     <link href="https://unpkg.com/jspsych@7.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
     <script src="https://unpkg.com/@jspsych/plugin-browser-check@1.0.0"></script>
     <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.1"></script>
     <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.1"></script>
     <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.1"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.1"></script>
     <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.0.0"></script>
     <script src="./trials.js"></script>
 </head>
@@ -55,6 +56,7 @@
     // Timeline
     var timeline = []
 
+    // Browser check
     timeline.push({
         type: jsPsychBrowserCheck,
         inclusion_function: (data) => {
@@ -62,11 +64,11 @@
         },
         exclusion_message: (data) => {
             return `
-          <p>You must use a desktop/laptop computer to participate in this 
-          experiment.</p>
-          <p>Please restart the experiment on a desktop/laptop computer.</p>
-        `;
-        }
+                <p>You must use a desktop/laptop computer to participate in this 
+                experiment.</p>
+                <p>Please restart the experiment on a desktop/laptop computer.</p>
+            `;
+        },
     })
 
     // Enter full screen
@@ -75,49 +77,12 @@
         fullscreen_mode: true
     })
 
-    const screenWidth = window.screen.width
-    const screenHeight = window.screen.height
-
-    let img1Left = 95
-    let img2Left = 325
-    let img3Left = 620
-    if (screenWidth > 960) {
-        // Calculate padding
-        let padding = (screenWidth - 960) / 2
-        img1Left = img1Left + padding
-        img2Left = img2Left + padding
-        img3Left = img3Left + padding
-    }
-
-    let img1Top = 170
-    let img2Top = 260
-    let img3Top = 175
-
-    if (screenHeight > 650) {
-        // Calculate padding
-        let padding = (screenHeight - 650) / 2
-        img1Top = img1Top + padding
-        img2Top = img2Top + padding
-        img3Top = img3Top + padding
-    }
-
-    function makeButtons(images) {
-
-        if (images == null) {
-            return [
-                `<input type="image" src="./stimuli/%choice%" style="position: absolute; left: ${img1Left}px; top: ${img1Top}px"/>`,
-                `<input type="image" src="./stimuli/%choice%" style="position: absolute; left: ${img2Left}px; top: ${img2Top}px"/>`,
-                `<input type="image" src="./stimuli/%choice%" style="position: absolute; left: ${img3Left}px; top: ${img3Top}px"/>`
-            ]
-        } else {
-
-        }
-    }
-
     let images = [
-        `./stimuli/template-1.jpg`,
-        `./stimuli/template-2.jpg`,
-        `./stimuli/template-3.jpg`
+        `./stimuli/ex1.jpg`,
+        `./stimuli/ex2.jpg`,
+        `./stimuli/noiseEx.jpg`,
+        './stimuli/attentionChoice.jpg',
+        './stimuli/attentionTarget.jpg',
     ]
     for (trial of trials) {
         images.push(`./stimuli/trial${trial.Trial}-1.jpg`)
@@ -127,62 +92,110 @@
     // Preload
     timeline.push({
         type: jsPsychPreload,
-        auto_preload: false,
+        auto_preload: true,
         images: images
+    })
+
+    // Instructions
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+            <p>This is a task measuring your ability to match images of novel objects.</p>
+            <p>On each trial you will see <b>a target</b> briefly, followed by three options.</p>
+            <p>Choose which of the 3 options matches the target object.</p>
+        `,
+        choices: ['Click for instructions']
+    })
+
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: '',
+        choices: ['./stimuli/ex1.jpg'],
+        button_html: '<input type="image" src="%choice%"/>',
+    })
+
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: '',
+        choices: ['./stimuli/ex2.jpg'],
+        button_html: '<input type="image" src="%choice%"/>',
     })
 
     timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus: `
-            <p>On each trial, you will see 3 objects.</p>
-            <p>Once they disappear click to choose which one was DIFFERENT.</p>
+            <p>The first few trials will give you feedback on whether you got it right or not.</p>
         `,
-        choices: ['Click to start practice']
+        choices: ['Click to start this part']
     })
 
+    // Build mask slide
+    const mask = {
+        type: jsPsychImageKeyboardResponse,
+        stimulus: `./stimuli/mask.jpg`,
+        trial_duration: 500,
+        choices: ['NO_KEYS'],
+        post_trial_gap: 0
+    }
     // Build fixation
     const fix = {
-        type: jsPsychHtmlKeyboardResponse,
-        stimulus: "<h1>+</h1>",
+        type: jsPsychImageKeyboardResponse,
+        stimulus: `./stimuli/fix.jpg`,
+        trial_duration: 500,
         choices: ['NO_KEYS'],
-        trial_duration: 250,
+        post_trial_gap: 0
     }
 
     for (let trial of trials) {
-        if (trial.Trial == 11) {
+        if (trial.Trial == 4) { // Instruction
             timeline.push({
                 type: jsPsychHtmlButtonResponse,
                 stimulus: `
-                    <p>There will be 43 more trials, and the objects may be shown more briefly.</p>
+                    <p>Now you won't receive feedback anymore.</p>
+                    <p>The target may be shown more briefly.</p>
+                    <p>But the task is always to find the choice that best matches the target.</p>
                 `,
-                choices: ['Click to start']
+                choices: ['Click to continue']
             })
-        } else if (doAttentionCheck && trial.Trial == 37) {
+        } else if (trial.Trial == 28) { // Noise instructions
+            timeline.push({
+                type: jsPsychHtmlButtonResponse,
+                stimulus: `
+                    <p>For the last trials, the target will be shown behind distracting noise, like this:</p>
+                    <img src="./stimuli/noiseEx.jpg">
+                    <p>This may be difficult, just keep trying your best!</p>
+                `,
+                choices: ['Click to continue']
+            })
+        } else if (doAttentionCheck && trial.Trial == 41) { // Attention check
+            // Fixation
             timeline.push(fix)
 
+            // Target
             timeline.push({
-                type: jsPsychHtmlKeyboardResponse,
-                stimulus: `
-                    <h1 style="position: relative; top: -20vh;">Do not click anything, just wait!</h1>
-                    <img src="./stimuli/trial1-1.jpg" style="position: absolute; left: ${img1Left}px; top: ${img1Top}px">
-                    <img src="./stimuli/trial1-1.jpg" style="position: absolute; left: ${img2Left}px; top: ${img2Top}px">
-                    <img src="./stimuli/trial1-1.jpg" style="position: absolute; left: ${img3Left}px; top: ${img3Top}px">
-                `,
+                type: jsPsychImageKeyboardResponse,
+                stimulus: `./stimuli/attentionTarget.jpg`,
+                trial_duration: 1000,
                 choices: ['NO_KEYS'],
-                trial_duration: 4000,
                 post_trial_gap: 0
             })
 
+            // Mask
+            timeline.push(mask)
+
+            // Choices
             timeline.push({
                 type: jsPsychHtmlButtonResponse,
-                stimulus: `<h2 style="position: relative; top: -20vh;">Which one was different?</h1>`,
-                choices: ['template-1.jpg', 'template-2.jpg', 'template-3.jpg'],
-                button_html: x => makeButtons(),
-                trial_duration: 3000,
-                data: { attentionTrial: true },
+                stimulus: '<p>Click the third choice</p>',
+                choices: ['attentionChoice.jpg', 'attentionChoice.jpg', 'attentionChoice.jpg'],
+                button_html: '<input type="image" src="./stimuli/%choice%"/>',
+                data: {
+                    AttentionTrial: true
+                },
                 on_finish: function (data) {
-                    data.success = data.response == null
+                    data.success = 2 == data.response
                     attentionFails += data.success ? 0 : 1
+
                     if (attentionFails > maxAttentionFails && source == 'prolific') {
                         // Knock out prolific participants
                         knockedOut = true
@@ -193,26 +206,27 @@
             })
         }
 
-        // Add mask
+        // Fixation
         timeline.push(fix)
 
+        // Target
         timeline.push({
-            type: jsPsychHtmlKeyboardResponse,
-            stimulus: `
-                <img src="./stimuli/trial${trial.Trial}-1.jpg" style="position: absolute; left: ${img1Left}px; top: ${img1Top}px">
-                <img src="./stimuli/trial${trial.Trial}-2.jpg" style="position: absolute; left: ${img2Left}px; top: ${img2Top}px">
-                <img src="./stimuli/trial${trial.Trial}-3.jpg" style="position: absolute; left: ${img3Left}px; top: ${img3Top}px">
-            `,
-            choices: ['NO_KEYS'],
+            type: jsPsychImageKeyboardResponse,
+            stimulus: `./stimuli/trial${trial.Trial}-target.jpg`,
             trial_duration: trial.Duration,
+            choices: ['NO_KEYS'],
             post_trial_gap: 0
         })
 
+        // Mask
+        timeline.push(mask)
+
+        // Choices
         timeline.push({
             type: jsPsychHtmlButtonResponse,
-            stimulus: `<h2 style="position: relative; top: -20vh;">Which one was different?</h1>`,
-            choices: ['template-1.jpg', 'template-2.jpg', 'template-3.jpg'],
-            button_html: x => makeButtons(),
+            stimulus: '',
+            choices: [1, 2, 3].map(x => `trial${trial.Trial}-${x}.jpg`),
+            button_html: '<input type="image" src="./stimuli/%choice%"/>',
             data: {
                 SbjID: sbjID,
                 TrialN: trial.Trial,
@@ -222,9 +236,11 @@
             on_finish: function (data) {
                 data.Correct = data.CorrRes == data.response
                 data.AttentionFails = attentionFails
-            }
+            },
+            post_trial_gap: 0
         })
 
+        // Feedback
         if (trial.Feedback) {
             timeline.push({
                 type: jsPsychHtmlKeyboardResponse,
