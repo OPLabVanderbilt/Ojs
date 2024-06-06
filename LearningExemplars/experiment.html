@@ -17,7 +17,7 @@
 <script>
   keys = ['g', 'h', 'j']
   ITI = 500
-  const studyTime = 20000 // Set to null to allow infinite study time
+  const studyTime = 20000 
 
   let chainLink = '' // Add link here if you want to link to another experiment/site at finish
   let maxAttentionFails = 1
@@ -149,12 +149,12 @@
       timeline.push({
         type: jsPsychImageKeyboardResponse,
         stimulus: './stimuli/attentionCheck.jpg',
-        choices: keys.concat('y'),
-        prompt: '<p>Please press the y key.</p>',
+        choices: keys,
+        prompt: '<p><b>' + keys.join(' - '.repeat(21)) + '</b></p>',
         post_trial_gap: ITI,
         data: { attentionTrial: true },
         on_finish: function (data) {
-          data.success = jsPsych.pluginAPI.compareKeys(data.response, 'y')
+          data.success = jsPsych.pluginAPI.compareKeys(data.response, keys[0])
           attentionFails += data.success ? 0 : 1
           if (attentionFails > maxAttentionFails && source == 'prolific') {
             // Knock out prolific participants
