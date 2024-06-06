@@ -81,7 +81,9 @@
         `./stimuli/ex1.jpg`,
         `./stimuli/ex2.jpg`,
         `./stimuli/noiseEx.jpg`,
-        './stimuli/attentionChoice.jpg',
+        './stimuli/attentionChoice-1.jpg',
+        './stimuli/attentionChoice-2.jpg',
+        './stimuli/attentionChoice-3.jpg',
         './stimuli/attentionTarget.jpg',
     ]
     for (trial of trials) {
@@ -186,8 +188,8 @@
             // Choices
             timeline.push({
                 type: jsPsychHtmlButtonResponse,
-                stimulus: '<p>Click the third choice</p>',
-                choices: ['attentionChoice.jpg', 'attentionChoice.jpg', 'attentionChoice.jpg'],
+                stimulus: '',
+                choices: ['attentionChoice-1.jpg', 'attentionChoice-2.jpg', 'attentionChoice-3.jpg'],
                 button_html: '<input type="image" src="./stimuli/%choice%"/>',
                 data: {
                     AttentionTrial: true
