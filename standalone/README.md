@@ -4,7 +4,7 @@ have been packaged as standalone folders for each test so that they can be used
 easily offline. All tests will run with attention checks in the middle of the
 test by default.
 
-To download the tests, download the zip file from this [release](https://github.com/OPLabVanderbilt/Ojs/releases/download/v2.1/oJS-standalone-v2.1.zip). 
+To download the tests, download the zip file from this [release](https://github.com/OPLabVanderbilt/Ojs/releases/download/v2.2/oJS-standalone-v2.2.zip). 
 Then unzip the file and each test will be in a separate folder ready to use. 
 
 To run a test, just open the experiment.html file. It should open in your 
@@ -22,4 +22,4 @@ this repository.
 You can read our paper on the development, validation, and use of these tests here: https://psyarxiv.com/bmyan/.
 
 If you use any of these tests, please cite the following paper:
-Smithson, C., Chow, J. K., Chang, T., & Gauthier, I. (2023). Measuring object recognition ability: reliability, validity, and the aggregate z-score approach. [Manuscript submitted for publication]. https://doi.org/10.31234/osf.io/bmyan
+Smithson, C. J. R., Chow, J. K., Chang, T.-Y., & Gauthier, I. (2024). Measuring object recognition ability: Reliability, validity, and the aggregate z-score approach. Behavior Research Methods. https://doi.org/10.3758/s13428-024-02372-w
