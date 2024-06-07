@@ -145,6 +145,25 @@
         trial_duration: studyTime,
         post_trial_gap: ITI
       })
+    } else if (doAttentionCheck && trial.Trial == 19) {
+      timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: './stimuli/attentionCheck.jpg',
+        choices: keys,
+        prompt: '<p><b>' + keys.join(' - '.repeat(21)) + '</b></p>',
+        post_trial_gap: ITI,
+        data: { attentionTrial: true },
+        on_finish: function (data) {
+          data.success = jsPsych.pluginAPI.compareKeys(data.response, keys[0])
+          attentionFails += data.success ? 0 : 1
+          if (attentionFails > maxAttentionFails && source == 'prolific') {
+            // Knock out prolific participants
+            knockedOut = true
+            jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+            //window.location = "https://andrexia.com"
+          }
+        }
+      })
     } else if (doAttentionCheck && trial.Trial == 30) {
       timeline.push({
         type: jsPsychImageKeyboardResponse,

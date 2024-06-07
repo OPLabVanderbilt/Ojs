@@ -169,7 +169,7 @@
                 `,
                 choices: ['Click to continue']
             })
-        } else if (doAttentionCheck && trial.Trial == 41) { // Attention check
+        } else if (doAttentionCheck && trial.Trial == 25) { // Attention check
             // Fixation
             timeline.push(fix)
 
@@ -196,6 +196,43 @@
                 },
                 on_finish: function (data) {
                     data.success = 2 == data.response
+                    attentionFails += data.success ? 0 : 1
+
+                    if (attentionFails > maxAttentionFails && source == 'prolific') {
+                        // Knock out prolific participants
+                        knockedOut = true
+                        jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                        //window.location = "https://andrexia.com"
+                    }
+                }
+            })
+        } else if (doAttentionCheck && trial.Trial == 41) { // Attention check
+            // Fixation
+            timeline.push(fix)
+
+            // Target
+            timeline.push({
+                type: jsPsychImageKeyboardResponse,
+                stimulus: `./stimuli/attentionTarget.jpg`,
+                trial_duration: 1000,
+                choices: ['NO_KEYS'],
+                post_trial_gap: 0
+            })
+
+            // Mask
+            timeline.push(mask)
+
+            // Choices
+            timeline.push({
+                type: jsPsychHtmlButtonResponse,
+                stimulus: '',
+                choices: ['attentionChoice-3.jpg', 'attentionChoice-2.jpg', 'attentionChoice-1.jpg'],
+                button_html: '<input type="image" src="./stimuli/%choice%"/>',
+                data: {
+                    AttentionTrial: true
+                },
+                on_finish: function (data) {
+                    data.success = 0 == data.response
                     attentionFails += data.success ? 0 : 1
 
                     if (attentionFails > maxAttentionFails && source == 'prolific') {
