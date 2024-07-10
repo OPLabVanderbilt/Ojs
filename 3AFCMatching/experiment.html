@@ -53,6 +53,11 @@
         source = 'unknown'
     }
 
+    jsPsych.data.addProperties({
+        SbjID: sbjID,
+        Source: source,
+        Study: study
+    })
     // Timeline
     var timeline = []
 
