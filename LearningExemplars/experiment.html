@@ -55,6 +55,12 @@
     source = 'unknown'
   }
 
+  jsPsych.data.addProperties({
+    SbjID: sbjID,
+    Source: source,
+    Study: study
+  })
+
   // Timeline
   var timeline = [];
 
@@ -193,7 +199,6 @@
       post_trial_gap: ITI,
       data: {
         TestTrial: true,
-        SbjID: sbjID,
         Trial: trial.Trial,
         TestImage: trial.Img,
         FoilLevel: trial.FoilLevel,
