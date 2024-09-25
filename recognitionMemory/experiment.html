@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Rec Mem</title>
+    <script src="https://unpkg.com/jspsych@7.2.1"></script>
+    <link href="https://unpkg.com/jspsych@7.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@jspsych/plugin-browser-check@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-button-response@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
+    <script src="./trials.js"></script>
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body></body>
+<script>
+let chainLink = '' // Change this to link to another experiment after this
+let maxAttentionFails = 100
+    let doAttentionCheck = true
+    const timeoutMin = 500
+    const timeoutLink = ''
+    const failLink = ''
+    const task = 'recMem'
+
+    let knockedOut = false
+    let timedOut = false
+    var jsPsych = initJsPsych({
+        default_iti: 750,
+        on_finish: function () {
+            if (!chainLink == '' && !knockedOut && !timedOut) {
+                window.location = chainLink + "?id=" + sbjID + "&num=" + attentionFails + "&src=" + source + '&study=' + study + '&time=' + Math.round(expTime)
+            } else if (!failLink == '' && knockedOut) {
+                window.location = failLink
+            } else if (!timeoutLink == '' && timedOut) {
+                window.location = timeoutLink
+            }
+        }
+    });
+
+    let study = jsPsych.data.getURLVariable('study')
+    if (study === undefined) {
+        study = 'unknown'
+    }
+
+    // Make id
+    let sbjID = jsPsych.data.getURLVariable('id');
+    if (sbjID === undefined) {
+        sbjID = jsPsych.randomization.randomID(10)
+    }
+
+    // Get attention check counter
+    let attentionFails = Number(jsPsych.data.getURLVariable('num'))
+    if (isNaN(attentionFails)) {
+        attentionFails = 0
+    }
+
+    // Get source of participant
+    let source = jsPsych.data.getURLVariable('src')
+    if (source === undefined) {
+        source = 'unknown'
+    }
+    
+    // Get time since start
+    let origTime = Number(jsPsych.data.getURLVariable('time'))
+    if (isNaN(origTime)) {
+        origTime = 0
+    }
+    let expTime = origTime
+
+    jsPsych.data.addProperties({
+        SbjID: sbjID,
+        Study: study,
+        Source: source,
+        OrigTime: origTime,
+        StartTime: Date.now(),
+        Task: task
+    })
+
+    // Timeline
+    var timeline = [];
+
+    timeline.push({
+        type: jsPsychBrowserCheck,
+        inclusion_function: (data) => {
+            return !data.mobile
+        },
+        exclusion_message: (data) => {
+            return `
+            <p>You must use a desktop/laptop computer to participate in this 
+            experiment.</p>
+            <p>Please restart the experiment on a desktop/laptop computer.</p>
+        `;
+        }
+    })
+    
+    // Enter full screen
+    timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: true
+    })
+
+    // Build images to preload
+    let images = []
+    images.push([])
+    
+    for(let i = 1; i < 7; i++) {
+        images.push(`./stimuli/study${i}.png`)
+    }
+    
+    for(let i = 1; i < 4; i++) {
+        images.push(`./stimuli/attentionCheck${i}a.png`,
+                    `./stimuli/attentionCheck${i}b.png`,
+                    `./stimuli/attentionCheck${i}c.png`)
+    }
+
+    for (trial of trials) {
+        images.push(`./stimuli/${trial.Trial}a.png`)
+        images.push(`./stimuli/${trial.Trial}b.png`)
+        images.push(`./stimuli/${trial.Trial}c.png`)
+    }
+
+    // Preload
+    timeline.push({
+        type: jsPsychPreload,
+        auto_preload: true,
+        images:images
+    })
+    
+    // instructions
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+        <p>We will ask you to study 6 sets of 4 objects.<br>Each group of 4 will
+        be shown together,<br>for 15 seconds.</p>
+        <p>These objects are all unfamiliar and you<br>won't be able to name 
+        them. Just study them as<br>best you can so that you can remember them
+        later</p>
+        `,
+        choices: ['Click here to continue'],
+    })
+    
+    // study images
+    for (let i = 1; i < 7; i++) {
+      timeline.push({
+        type: jsPsychImageKeyboardResponse,
+        stimulus: `./stimuli/study${i}.png`,
+        trial_duration: 15000,
+        choices: "NO_KEYS"
+      })
+    }
+    
+    // story
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+        <h1>Please read this paragraph, a question will follow.</h1>
+        <p>Once upon a time, there was a small fish named Finn who lived in a vast<br>
+        ocean. Finn was a curious fish who always loved exploring new places. He<br> 
+        swam around the ocean, learning about all the different creatures and<br>
+        plants that lived in the water. One day, while exploring a coral reef, Finn<br>
+        saw a small, shiny object on the ocean floor. He swam down to investigate<br>
+        and discovered it was a piece of a treasure map. Finn was intrigued and<br>
+        decided to follow the map in hopes of finding the treasure. As he swam<br>
+        deeper into the ocean, Finn encountered various obstacles, such as strong<br>
+        currents and dangerous predators. But he persevered, using his wits and<br>
+        agility to navigate around them. Finally, after many days of swimming,<br>
+        Finn arrived at the location marked on the map. He found a sunken ship<br>
+        and, to his surprise, a treasure chest filled with precious jewels and gold<br>
+        coins. Overjoyed, Finn swam back to his school of fish and shared the<br>
+        treasure with his friends. They were amazed and grateful for Finn's<br>
+        bravery and determination.</p>
+        `,
+        choices: ['Click here to continue']
+    })
+    
+    // story question
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+      <p>What did Finn do with the treasure he found?</p><br><br>
+      `,
+      choices: ['He kept it all for himself', 'He shared it with his friends',
+                'He sold it to other sea creatures']
+    })
+    
+    // instructions
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+      <p>Remember those objects you studied?</p>
+      <p>On each trial, you will see 3 options.<br>
+      Choose the one that shows the object<br>
+      that you remember studying before.<br>
+      If you are not sure, give your best guess.</p><br><br>
+      `,
+      choices: ['Click to start']
+    })
+    
+    for (let trial of trials) {
+
+    // attention checks
+    if (doAttentionCheck && trial.Trial == 7) {
+        timeline.push({
+            type: jsPsychImageButtonResponse,
+            choices: [`./stimuli/attentionCheck1a.png`, `./stimuli/attentionCheck1b.png`,
+                      `./stimuli/attentionCheck1c.png`],
+            button_html: '<input type="image" src="%choice%"/>',
+            css_classes: ['trial'],
+            on_finish: function (data) {
+                data.TestTrial = false,
+                data.Task = 'recMem',
+                data.AttCheck = true,
+                data.SbjID = sbjID,
+                data.CorrRes = 1,
+                data.Corr = data.response === data.CorrRes,
+                attentionFails += data.Corr ? 0 : 1
+                data.AttentionFails = attentionFails
+                if (attentionFails > maxAttentionFails && source == 'prolific') {
+                    // Knock out prolific participants
+                    knockedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                }
+                data.KnockedOut = knockedOut
+                data.TimedOut = timedOut
+                data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                data.ExpTime = data.TimeSinceStart + data.OrigTime
+                expTime = data.ExpTime
+                if (data.ExpTime > 60 * timeoutMin) {
+                    timedOut = true
+                    data.TimedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                }
+            }
+        })
+    }
+
+    // attention checks
+    if (doAttentionCheck && trial.Trial == 13) {
+        timeline.push({
+            type: jsPsychImageButtonResponse,
+            choices: [`./stimuli/attentionCheck2a.png`, `./stimuli/attentionCheck2b.png`,
+                      `./stimuli/attentionCheck2c.png`],
+            button_html: '<input type="image" src="%choice%"/>',
+            css_classes: ['trial'],
+            on_finish: function (data) {
+                data.TestTrial = false,
+                data.Task = 'recMem',
+                data.AttCheck = true,
+                data.SbjID = sbjID,
+                data.CorrRes = 1,
+                data.Corr = data.response === data.CorrRes,
+                attentionFails += data.Corr ? 0 : 1
+                data.AttentionFails = attentionFails
+                if (attentionFails > maxAttentionFails && source == 'prolific') {
+                    // Knock out prolific participants
+                    knockedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                }
+                data.KnockedOut = knockedOut
+                data.TimedOut = timedOut
+                data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                data.ExpTime = data.TimeSinceStart + data.OrigTime
+                expTime = data.ExpTime
+                if (data.ExpTime > 60 * timeoutMin) {
+                    timedOut = true
+                    data.TimedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                }
+            }
+        })
+    }
+
+    // attention checks
+    if (doAttentionCheck && trial.Trial == 21) {
+        timeline.push({
+            type: jsPsychImageButtonResponse,
+            choices: [`./stimuli/attentionCheck3a.png`, `./stimuli/attentionCheck3b.png`,
+                      `./stimuli/attentionCheck3c.png`],
+            button_html: '<input type="image" src="%choice%"/>',
+            css_classes: ['trial'],
+            on_finish: function (data) {
+                data.TestTrial = false,
+                data.Task = 'recMem',
+                data.AttCheck = true,
+                data.SbjID = sbjID,
+                data.CorrRes = 0,
+                data.Corr = data.response === data.CorrRes,
+                attentionFails += data.Corr ? 0 : 1
+                data.AttentionFails = attentionFails
+                if (attentionFails > maxAttentionFails && source == 'prolific') {
+                    // Knock out prolific participants
+                    knockedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                }
+                data.KnockedOut = knockedOut
+                data.TimedOut = timedOut
+                data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                data.ExpTime = data.TimeSinceStart + data.OrigTime
+                expTime = data.ExpTime
+                if (data.ExpTime > 60 * timeoutMin) {
+                    timedOut = true
+                    data.TimedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                }
+            }
+        })
+    }
+
+
+
+        timeline.push({
+            type: jsPsychImageButtonResponse,
+            choices: trial.Choices,
+            button_html: '<input type="image" src="%choice%"/>',
+            css_classes: ['trial'],
+            on_finish: function (data) {
+                data.TestTrial = true,
+                data.Trial = trial.Trial,
+                data.Task = 'recMem',
+                data.SbjID = sbjID,
+                data.AttentionFails = attentionFails,
+                data.CorrRes = trial.CorrRes,
+                data.Corr = data.response === data.CorrRes
+                data.KnockedOut = knockedOut
+                data.TimedOut = timedOut
+                data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                data.ExpTime = data.TimeSinceStart + data.OrigTime
+                expTime = data.ExpTime
+                if (data.ExpTime > 60 * timeoutMin) {
+                    timedOut = true
+                    data.TimedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                }
+            }
+        })
+    }
+      
+    // Exit fullscreen
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: false
+    })
+      
+    // End card
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+        <p>You have completed this test!</p>
+        `,
+        choices: ['Click here to continue'],
+    })
+    
+    // Run
+    jsPsych.run(timeline)
+</script>
+
+</html>

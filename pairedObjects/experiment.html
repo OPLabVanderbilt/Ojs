@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Paired Objects</title>
+    <script src="https://unpkg.com/jspsych@7.2.1"></script>
+    <link href="https://unpkg.com/jspsych@7.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@jspsych/plugin-browser-check@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-button-response@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
+    <script src="./trials.js"></script>
+</head>
+
+<body></body>
+<script>
+    let chainLink = '' // Add link here if you want to link to another experiment/site at finish
+    let maxAttentionFails = 100
+    let doAttentionCheck = true
+    const timeoutMin = 500
+    const timeoutLink = ''
+    const failLink = ''
+    const task = 'pairedObjects'
+    
+    let knockedOut = false
+    let timedOut = false
+    var jsPsych = initJsPsych({
+        default_iti: 750,
+        on_finish: function () {
+            if (!chainLink == '' && !knockedOut && !timedOut) {
+                window.location = chainLink + "?id=" + sbjID + "&num=" + attentionFails + "&src=" + source + '&study=' + study + '&time=' + Math.round(expTime)
+            } else if (!failLink == '' && knockedOut) {
+                window.location = failLink
+            } else if (!timeoutLink == '' && timedOut) {
+                window.location = timeoutLink
+            }
+        }
+    });
+
+    let study = jsPsych.data.getURLVariable('study')
+    if (study === undefined) {
+        study = 'unknown'
+    }
+
+    // Make id
+    let sbjID = jsPsych.data.getURLVariable('id');
+    if (sbjID === undefined) {
+        sbjID = jsPsych.randomization.randomID(10)
+    }
+
+    // Get attention check counter
+    let attentionFails = Number(jsPsych.data.getURLVariable('num'))
+    if (isNaN(attentionFails)) {
+        attentionFails = 0
+    }
+
+    // Get source of participant
+    let source = jsPsych.data.getURLVariable('src')
+    if (source === undefined) {
+        source = 'unknown'
+    }
+
+    // Get time since start
+    let origTime = Number(jsPsych.data.getURLVariable('time'))
+    if (isNaN(origTime)) {
+        origTime = 0
+    }
+    let expTime = origTime
+
+    jsPsych.data.addProperties({
+        SbjID: sbjID,
+        Study: study,
+        Source: source,
+        OrigTime: origTime,
+        StartTime: Date.now(),
+        Task: task
+    })
+
+    // Timeline
+    var timeline = [];
+
+    timeline.push({
+        type: jsPsychBrowserCheck,
+        inclusion_function: (data) => {
+            return !data.mobile
+        },
+        exclusion_message: (data) => {
+            return `
+        <p>You must use a desktop/laptop computer to participate in this 
+        experiment.</p>
+        <p>Please restart the experiment on a desktop/laptop computer.</p>
+    `;
+        }
+    })
+
+    // Enter full screen
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: true
+    })
+
+    // Build images to preload
+    let images = []
+    
+    for (let trial of loop1) {
+      images.push([`./stimuli/loop1Study${trial.Trial}.png`,
+                   `./stimuli/loop1Test${trial.Trial}.png`,
+                   `./stimuli/loop1Test${trial.Trial}a.png`,
+                   `./stimuli/loop1Test${trial.Trial}b.png`,
+                   `./stimuli/loop1Test${trial.Trial}c.png`])
+    }
+    
+    for (let trial of loop2) {
+      images.push([`./stimuli/loop2Test${trial.Trial}.png`,
+                   `./stimuli/loop2Test${trial.Trial}a.png`,
+                   `./stimuli/loop2Test${trial.Trial}b.png`,
+                   `./stimuli/loop2Test${trial.Trial}c.png`])
+    }
+    
+    for (let i = 1; i < 6; i++) {
+      images.push([`./stimuli/loop3Study${i}.png`])
+    }
+
+    for(let trial of loop4) {
+      images.push([`./stimuli/loop4Test${trial.Trial}.png`,
+                   `./stimuli/loop4Test${trial.Trial}a.png`,
+                   `./stimuli/loop4Test${trial.Trial}b.png`,
+                   `./stimuli/loop4Test${trial.Trial}c.png`])
+    }
+    
+    for (let i = 16; i < 21; i++) {
+      images.push([`./stimuli/loop4Test${i}d.png`])
+    }
+    
+    for (let trial of loop5) {
+      images.push([`./stimuli/loop5Test${trial.Trial}a.png`,
+                   `./stimuli/loop5Test${trial.Trial}b.png`])
+    }
+
+     // Preload
+    timeline.push({
+        type: jsPsychPreload,
+        auto_preload: true,
+        images: images
+    })
+
+    // Instructions
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+    <p>We will show you pairs with artificial<br>shapes and objects.</p>
+    <p>Each shape and object pair<br>will always go together<br>for the whole
+    task.</p>
+    <p>Try to learn the pairs</p>
+    `,
+        choices: ['Click here to continue'],
+    })
+    // study test loop (x5)
+    for(let trial of loop1) {
+      // study
+      timeline.push({
+            type: jsPsychImageKeyboardResponse,
+            stimulus: trial.studyStim,
+            choices: ["NO_KEYS"],
+            trial_duration: 4000
+      })
+      // test
+      timeline.push({
+            type: jsPsychImageButtonResponse,
+            prompt: `<p>Click on the correct object at the bottom which pairs with the symbol
+            at the top.</p>`,
+            choices: trial.Choices,
+            stimulus: trial.testStim,
+            button_html: '<input type="image" src="%choice%"/>',
+            on_finish: function (data) {
+                data.TestTrial = true
+                data.Task = 'pairedObjects'
+                data.Trial = trial.Trial
+                data.AttentionFails = attentionFails
+                data.SbjID = sbjID
+                data.CorrRes = trial.CorrRes
+                data.Corr = data.response === data.CorrRes
+            }
+        })
+      // feedback
+        timeline.push({
+            type: jsPsychHtmlKeyboardResponse,
+            choices: ["NO_KEYS"],
+            trial_duration: 500,
+            response_ends_trial: false,
+            stimulus: function() {
+                if (jsPsych.data.get().last(1).values()[0].Corr) {
+                        return '<h1 style="color: green;font-size:60px">CORRECT!</h1>'
+                    } else {
+                        return '<h1 style="color: red;font-size:60px">INCORRECT</h1>'
+                    }
+            }
+        })
+    }
+    // test loop (x5)
+    for(let trial of loop2) {
+      timeline.push({
+            type: jsPsychImageButtonResponse,
+            choices: trial.Choices,
+            stimulus: trial.Stim,
+            button_html: '<input type="image" src="%choice%"/>',
+            on_finish: function (data) {
+                data.TestTrial = true
+                data.Task = 'pairedObjects'
+                data.AttentionFails = attentionFails
+                data.Trial = trial.Trial
+                data.SbjID = sbjID
+                data.CorrRes = trial.CorrRes
+                data.Corr = data.response === data.CorrRes
+                data.KnockedOut = knockedOut
+                data.TimedOut = timedOut
+                data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                data.ExpTime = data.TimeSinceStart + data.OrigTime
+                expTime = data.ExpTime
+                if (data.ExpTime > 60 * timeoutMin) {
+                    timedOut = true
+                    data.TimedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                }
+            }
+        })
+
+        // feedback
+        timeline.push({
+            type: jsPsychHtmlKeyboardResponse,
+            choices: ["NO_KEYS"],
+            trial_duration: 500,
+            response_ends_trial: false,
+            stimulus: function() {
+                if (jsPsych.data.get().last(1).values()[0].Corr) {
+                        return '<h1 style="color: green;font-size:60px">CORRECT!</h1>'
+                    } else {
+                        return '<h1 style="color: red;font-size:60px">INCORRECT</h1>'
+                    }
+            }
+        })
+    }
+
+    // instructions
+    timeline.push({
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: `Here's Another chance<br>to study the pairs.`,
+          choices: ["NO_KEYS"],
+          trial_duration: 4000
+    })
+    // study loop (x5)
+    for(let trial of loop3) {
+      // study
+      timeline.push({
+            type: jsPsychImageKeyboardResponse,
+            stimulus: trial.Stim,
+            choices: ["NO_KEYS"],
+            trial_duration: 4000
+      })
+    }
+    // instructions
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+    <p>Now you will see one shape<br>and three objects.</p>
+    <p>Select the correct object.</p>
+    `,
+        choices: ['Click here to continue'],
+    })
+    // test loop (x10)
+    for(let trial of loop4) {
+      timeline.push({
+            type: jsPsychImageButtonResponse,
+            choices: trial.Choices,
+            stimulus: trial.Stim,
+            button_html: '<input type="image" src="%choice%"/>',
+            on_finish: function (data) {
+                data.TestTrial = true
+                data.Trial = trial.Trial
+                data.AttentionFails = attentionFails
+                data.Task = 'pairedObjects'
+                data.SbjID = sbjID
+                data.CorrRes = trial.CorrRes
+                data.Corr = data.response === data.CorrRes
+                data.KnockedOut = knockedOut
+                data.TimedOut = timedOut
+                data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                data.ExpTime = data.TimeSinceStart + data.OrigTime
+                expTime = data.ExpTime
+                if (data.ExpTime > 60 * timeoutMin) {
+                    timedOut = true
+                    data.TimedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                }
+                
+            }
+        })
+    }
+    // instructions
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+    <p>Now you will see two pairs.</p>
+    <p>Only one of the pairs is correct.</p>
+    <p>Select the correct pair.</p>
+    `,
+        choices: ['Click here to continue'],
+    })
+    // test loop (x15)
+    for(let trial of loop5) {
+      timeline.push({
+            type: jsPsychImageButtonResponse,
+            choices: trial.Choices,
+            button_html: '<input type="image" src="%choice%"/>',
+            on_finish: function (data) {
+                data.TestTrial = true
+                data.Trial = trial.Trial
+                data.AttentionFails = attentionFails
+                data.Task = 'pairedObjects'
+                data.SbjID = sbjID
+                data.CorrRes = trial.CorrRes
+                data.Corr = data.response === data.CorrRes
+                data.KnockedOut = knockedOut
+                data.TimedOut = timedOut
+                data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                data.ExpTime = data.TimeSinceStart + data.OrigTime
+                expTime = data.ExpTime
+                if (data.ExpTime > 60 * timeoutMin) {
+                    timedOut = true
+                    data.TimedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                }
+            }
+        })
+    }
+    // End card
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+    <p>You have completed this task!</p>
+    `,
+        choices: ['Click here to continue'],
+    })
+
+    // Exit fullscreen
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: false
+    })
+
+    // Run
+    jsPsych.run(timeline);
+</script>
+
+</html>

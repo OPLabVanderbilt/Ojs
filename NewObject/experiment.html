@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>New Object</title>
+    <script src="https://unpkg.com/jspsych@7.2.1"></script>
+    <link href="https://unpkg.com/jspsych@7.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@jspsych/plugin-browser-check@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-button-response@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
+    <script src="./trials.js"></script>
+</head>
+
+<body></body>
+<script>
+    let chainLink = '' // Add link here if you want to link to another experiment/site at finish
+    let maxAttentionFails = 100
+    let doAttentionCheck = true
+    const timeoutMin = 500
+    const timeoutLink = ''
+    const failLink = ''
+    const task = 'newObject'
+
+    let knockedOut = false
+    let timedOut = false
+    var jsPsych = initJsPsych({
+        default_iti: 750,
+        on_finish: function () {
+            if (!chainLink == '' && !knockedOut && !timedOut) {
+                window.location = chainLink + "?id=" + sbjID + "&num=" + attentionFails + "&src=" + source + '&study=' + study + '&time=' + Math.round(expTime)
+            } else if (!failLink == '' && knockedOut) {
+                window.location = failLink
+            } else if (!timeoutLink == '' && timedOut) {
+                window.location = timeoutLink
+            }
+        }
+    });
+
+    let study = jsPsych.data.getURLVariable('study')
+    if (study === undefined) {
+        study = 'unknown'
+    }
+
+    // Make id
+    let sbjID = jsPsych.data.getURLVariable('id');
+    if (sbjID === undefined) {
+        sbjID = jsPsych.randomization.randomID(10)
+    }
+
+    // Get attention check counter
+    let attentionFails = Number(jsPsych.data.getURLVariable('num'))
+    if (isNaN(attentionFails)) {
+        attentionFails = 0
+    }
+
+    // Get source of participant
+    let source = jsPsych.data.getURLVariable('src')
+    if (source === undefined) {
+        source = 'unknown'
+    }
+    
+    // Get time since start
+    let origTime = Number(jsPsych.data.getURLVariable('time'))
+    if (isNaN(origTime)) {
+        origTime = 0
+    }
+    let expTime = origTime
+
+    jsPsych.data.addProperties({
+        SbjID: sbjID,
+        Study: study,
+        Source: source,
+        OrigTime: origTime,
+        StartTime: Date.now(),
+        Task: task
+    })
+
+    // Timeline
+    var timeline = [];
+
+    timeline.push({
+        type: jsPsychBrowserCheck,
+        inclusion_function: (data) => {
+            return !data.mobile
+        },
+        exclusion_message: (data) => {
+            return `
+        <p>You must use a desktop/laptop computer to participate in this 
+        experiment.</p>
+        <p>Please restart the experiment on a desktop/laptop computer.</p>
+    `;
+        }
+    })
+
+    // Enter full screen
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: true
+    })
+
+    // Build images to preload
+    let images = []
+
+    images.push(['./stimuli/study.jpeg', './stimuli/firstTesta.png', 
+                './stimuli/firstTestb.png', './stimuli/firstTestc.png', 
+                './stimuli/firstTestd.png', `./stimuli/attentionCheck1a.png`, 
+                `./stimuli/attentionCheck1b.png`, `./stimuli/attentionCheck1c.png`, 
+                `./stimuli/attentionCheck1d.png`, `./stimuli/attentionCheck2a.png`, 
+                `./stimuli/attentionCheck2b.png`, `./stimuli/attentionCheck2c.png`, 
+                `./stimuli/attentionCheck2d.png`, `./stimuli/attentionCheck3a.png`, 
+                `./stimuli/attentionCheck3b.png`, `./stimuli/attentionCheck3c.png`, 
+                `./stimuli/attentionCheck3d.png`])
+
+    for (trial of feedbackTrials) {
+        images.push(`./stimuli/feedbackTrial${trial.Trial}a.png`)
+        images.push(`./stimuli/feedbackTrial${trial.Trial}b.png`)
+        images.push(`./stimuli/feedbackTrial${trial.Trial}c.png`)
+        images.push(`./stimuli/feedbackTrial${trial.Trial}d.png`)
+    }
+
+    for (trial of trials) {
+        images.push(`./stimuli/trial${trial.Trial}a.png`)
+        images.push(`./stimuli/trial${trial.Trial}b.png`)
+        images.push(`./stimuli/trial${trial.Trial}c.png`)
+        images.push(`./stimuli/trial${trial.Trial}d.png`)
+    }
+
+        // Preload
+    timeline.push({
+        type: jsPsychPreload,
+        auto_preload: true,
+        images: images
+    })
+
+    // Instructions 1
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+        <p>On this test, each trial will show 4 objects.</p>
+        <p>Your task is to find the object you have never seen before during
+        this task</p>
+        <p> There will always be one and only one NEW<br>
+        object that you have not seen yet.</p>
+        `,
+        choices: ['Click here to continue']
+    })
+    // Instructions 2
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+        <p>Always try to find the object you have not seen yet<br>
+        on each trial.</p>
+        <p>It may be hard sometimes, just guess as best<br>
+        you can if you are not sure.</p>
+        <p>You will get feedback on the first 5 trials.</p>
+        `,
+        choices: ['Click here to continue']
+    })
+    // Study image
+        timeline.push({
+            type: jsPsychImageKeyboardResponse,
+            stimulus: `./stimuli/study.jpeg`,
+            choices: ["NO_KEYS"],
+            trial_duration: 3000
+    })
+    //first test trial
+        // trial
+        timeline.push({
+            type: jsPsychHtmlButtonResponse,
+            stimulus: 'Click on the new one',
+            choices: ['./stimuli/firstTesta.png', './stimuli/firstTestb.png', 
+                    './stimuli/firstTestc.png', './stimuli/firstTestd.png'],
+            button_html: '<input type="image" src="%choice%"/>',
+            on_finish: function (data) {
+                data.TestTrial = true
+                data.Trial = 1
+                data.SbjID = sbjID
+                data.AttentionFails = attentionFails
+                data.CorrRes = 3
+                data.Corr = data.response === data.CorrRes
+                data.KnockedOut = knockedOut
+                data.TimedOut = timedOut
+                data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                data.ExpTime = data.TimeSinceStart + data.OrigTime
+                expTime = data.ExpTime
+                if (data.ExpTime > 60 * timeoutMin) {
+                    timedOut = true
+                    data.TimedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                }
+            }
+        })
+        // feedback
+        timeline.push({
+            type: jsPsychHtmlKeyboardResponse,
+            choices: ["NO_KEYS"],
+            trial_duration: 500,
+            response_ends_trial: false,
+            stimulus: function() {
+                if (jsPsych.data.get().last(1).values()[0].Corr) {
+                        return '<h1 style="color: green;font-size:60px">CORRECT!</h1>'
+                    } else {
+                        return '<h1 style="color: red;font-size:60px">INCORRECT</h1>'
+                    }
+            }
+        })
+    // test trials with feedback loop
+    for (let trial of feedbackTrials) {
+    // trial
+        timeline.push({
+            type: jsPsychHtmlButtonResponse,
+            stimulus: 'Click on the new one',
+            choices: trial.Choices,
+            button_html: '<input type="image" src="%choice%"/>',
+            on_finish: function (data) {
+                data.TestTrial = true
+                data.Task = 'newObject'
+                data.Trial = trial.Trial
+                data.AttentionFails = attentionFails
+                data.SbjID = sbjID
+                data.CorrRes = trial.CorrRes
+                data.Corr = data.response === data.CorrRes
+                data.KnockedOut = knockedOut
+                data.TimedOut = timedOut
+                data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                data.ExpTime = data.TimeSinceStart + data.OrigTime
+                expTime = data.ExpTime
+                if (data.ExpTime > 60 * timeoutMin) {
+                    timedOut = true
+                    data.TimedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                }
+            }
+        })
+        // feedback
+        timeline.push({
+            type: jsPsychHtmlKeyboardResponse,
+            choices: ["NO_KEYS"],
+            trial_duration: 1000,
+            response_ends_trial: false,
+            stimulus: function() {
+                if (jsPsych.data.get().last(1).values()[0].Corr) {
+                        return '<h1 style="color: green;font-size:60px">CORRECT!</h1>'
+                    } else {
+                        return '<h1 style="color: red;font-size:60px">INCORRECT</h1>'
+                    }
+            }
+        })
+    }
+    // test trials loop
+    for (let trial of trials) {
+
+        // attention checks
+        if (doAttentionCheck && trial.Trial == 14) {
+                timeline.push({
+                    type: jsPsychHtmlButtonResponse,
+                    stimulus: '',
+                    choices: [`./stimuli/attentionCheck1a.png`, `./stimuli/attentionCheck1b.png`,
+                            `./stimuli/attentionCheck1c.png`, `./stimuli/attentionCheck1d.png`],
+                    button_html: '<input type="image" src="%choice%"/>',
+                    on_finish: function (data) {
+                        data.TestTrial = false,
+                        data.Task = 'newObject',
+                        data.AttCheck = true,
+                        data.SbjID = sbjID,
+                        data.CorrRes = 3,
+                        data.Corr = data.response === data.CorrRes,
+                        attentionFails += data.Corr ? 0 : 1
+                        if (attentionFails > maxAttentionFails && source == 'prolific') {
+                            // Knock out prolific participants
+                            knockedOut = true
+                            jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                        }
+                        data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                        data.ExpTime = data.TimeSinceStart + data.OrigTime
+                        expTime = data.ExpTime
+                        if (data.ExpTime > 60 * timeoutMin) {
+                            timedOut = true
+                            data.TimedOut = true
+                            jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                        }
+                    }
+                })
+        }
+
+        if (doAttentionCheck && trial.Trial == 24) {
+                timeline.push({
+                    type: jsPsychHtmlButtonResponse,
+                    stimulus: '',
+                    choices: [`./stimuli/attentionCheck2a.png`, `./stimuli/attentionCheck2b.png`,
+                            `./stimuli/attentionCheck2c.png`, `./stimuli/attentionCheck2d.png`],
+                    button_html: '<input type="image" src="%choice%"/>',
+                    on_finish: function (data) {
+                        data.TestTrial = false,
+                        data.Task = 'newObject',
+                        data.AttCheck = true,
+                        data.SbjID = sbjID,
+                        data.CorrRes = 1,
+                        data.Corr = data.response === data.CorrRes,
+                        attentionFails += data.Corr ? 0 : 1
+                        if (attentionFails > maxAttentionFails && source == 'prolific') {
+                            // Knock out prolific participants
+                            knockedOut = true
+                            jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                        }
+                        data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                        data.ExpTime = data.TimeSinceStart + data.OrigTime
+                        expTime = data.ExpTime
+                        if (data.ExpTime > 60 * timeoutMin) {
+                            timedOut = true
+                            data.TimedOut = true
+                            jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                        }
+                    }
+                })
+        }
+
+        if (doAttentionCheck && trial.Trial == 32) {
+                timeline.push({
+                    type: jsPsychHtmlButtonResponse,
+                    stimulus: '',
+                    choices: [`./stimuli/attentionCheck3a.png`, `./stimuli/attentionCheck3b.png`,
+                            `./stimuli/attentionCheck3c.png`, `./stimuli/attentionCheck3d.png`],
+                    button_html: '<input type="image" src="%choice%"/>',
+                    on_finish: function (data) {
+                        data.TestTrial = false,
+                        data.Task = 'newObject',
+                        data.AttCheck = true,
+                        data.SbjID = sbjID,
+                        data.CorrRes = 0,
+                        data.Corr = data.response === data.CorrRes,
+                        attentionFails += data.Corr ? 0 : 1
+                        if (attentionFails > maxAttentionFails && source == 'prolific') {
+                            // Knock out prolific participants
+                            knockedOut = true
+                            jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                        }
+                        data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                        data.ExpTime = data.TimeSinceStart + data.OrigTime
+                        expTime = data.ExpTime
+                        if (data.ExpTime > 60 * timeoutMin) {
+                            timedOut = true
+                            data.TimedOut = true
+                            jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                        }
+                    }
+                })
+        }
+
+        // trial
+        timeline.push({
+            type: jsPsychHtmlButtonResponse,
+            stimulus: '',
+            choices: trial.Choices,
+            button_html: '<input type="image" src="%choice%"/>',
+            post_trial_gap: 500,
+            on_finish: function (data) {
+                data.TestTrial = true,
+                data.Task = 'newObject',
+                data.Trial = trial.Trial,
+                data.AttentionFails = attentionFails,
+                data.SbjID = sbjID,
+                data.CorrRes = trial.CorrRes,
+                data.Corr = data.response === data.CorrRes
+            }
+        })
+    }
+
+    // Exit fullscreen
+    timeline.push({
+        type: jsPsychFullscreen,
+        fullscreen_mode: false
+    })
+
+    // End card
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+    <p>You have completed this test!</p>
+    `,
+        choices: ['Click here to continue'],
+    })
+
+    // Run
+    jsPsych.run(timeline)
+</script>
+
+</html>
