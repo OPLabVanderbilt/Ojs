@@ -162,11 +162,10 @@
         on_finish: function (data) {
           data.success = jsPsych.pluginAPI.compareKeys(data.response, keys[0])
           attentionFails += data.success ? 0 : 1
-          if (attentionFails > maxAttentionFails && source == 'prolific') {
-            // Knock out prolific participants
+          if (attentionFails > maxAttentionFails) {
+            // Knock out participants
             knockedOut = true
             jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
-            //window.location = "https://andrexia.com"
           }
         }
       })
@@ -181,11 +180,10 @@
         on_finish: function (data) {
           data.success = jsPsych.pluginAPI.compareKeys(data.response, keys[0])
           attentionFails += data.success ? 0 : 1
-          if (attentionFails > maxAttentionFails && source == 'prolific') {
-            // Knock out prolific participants
+          if (attentionFails > maxAttentionFails) {
+            // Knock out participants
             knockedOut = true
             jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
-            //window.location = "https://andrexia.com"
           }
         }
       })

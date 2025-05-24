@@ -18,13 +18,22 @@
     let chainLink = '' // Add link here if you want to link to another experiment/site at finish
     let maxAttentionFails = 100
     let doAttentionCheck = true
+    const timeoutMin = 120
+    const timeoutLink = ''
+    const failLink = ''
+    const task = 'moo'
 
     let knockedOut = false
+    let timedOut = false
     var jsPsych = initJsPsych({
         default_iti: 750,
         on_finish: function () {
-            if (!chainLink == '' && !knockedOut) {
-                window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study
+            if (!chainLink == '' && !knockedOut && !timedOut) {
+                window.location = chainLink + "?id=" + sbjID + "&attn=" + attentionFails + "&src=" + source + '&study=' + study + '&time=' + Math.round(expTime)
+            } else if (!failLink == '' && knockedOut) {
+                window.location = failLink
+            } else if (!timeoutLink == '' && timedOut) {
+                window.location = timeoutLink
             }
         }
     });
@@ -51,6 +60,22 @@
     if (source === undefined) {
         source = 'unknown'
     }
+    
+    // Get time since start
+let origTime = Number(jsPsych.data.getURLVariable('time'))
+if (isNaN(origTime)) {
+    origTime = 0
+}
+let expTime = origTime
+
+jsPsych.data.addProperties({
+    SbjID: sbjID,
+    Study: study,
+    Source: source,
+    OrigTime: origTime,
+    StartTime: Date.now(),
+    Task: task
+})
 
     // Timeline
     var timeline = []
@@ -119,6 +144,13 @@
         `./stimuli/template-2.jpg`,
         `./stimuli/template-3.jpg`
     ]
+
+    for (let i =1; i <4; i++) {
+        images.push([`./stimuli/attentionCheck${i}a.jpg`,
+                     `./stimuli/attentionCheck${i}b.jpg`,
+                     `./stimuli/attentionCheck${i}c.jpg`])
+    }
+
     for (trial of trials) {
         images.push(`./stimuli/trial${trial.Trial}-1.jpg`)
         images.push(`./stimuli/trial${trial.Trial}-2.jpg`)
@@ -149,27 +181,18 @@
     }
 
     for (let trial of trials) {
-        if (trial.Trial == 11) {
-            timeline.push({
-                type: jsPsychHtmlButtonResponse,
-                stimulus: `
-                    <p>There will be 43 more trials, and the objects may be shown more briefly.</p>
-                `,
-                choices: ['Click to start']
-            })
-        } else if (doAttentionCheck && trial.Trial == 37) {
+        if (doAttentionCheck && trial.Trial == 12) {
             timeline.push(fix)
 
             timeline.push({
                 type: jsPsychHtmlKeyboardResponse,
                 stimulus: `
-                    <h1 style="position: relative; top: -20vh;">Do not click anything, just wait!</h1>
-                    <img src="./stimuli/trial1-1.jpg" style="position: absolute; left: ${img1Left}px; top: ${img1Top}px">
-                    <img src="./stimuli/trial1-1.jpg" style="position: absolute; left: ${img2Left}px; top: ${img2Top}px">
-                    <img src="./stimuli/trial1-1.jpg" style="position: absolute; left: ${img3Left}px; top: ${img3Top}px">
+                    <img src="./stimuli/attentionCheck1a.jpg" style="position: absolute; left: ${img1Left}px; top: ${img1Top}px">
+                    <img src="./stimuli/attentionCheck1b.jpg" style="position: absolute; left: ${img2Left}px; top: ${img2Top}px">
+                    <img src="./stimuli/attentionCheck1c.jpg" style="position: absolute; left: ${img3Left}px; top: ${img3Top}px">
                 `,
                 choices: ['NO_KEYS'],
-                trial_duration: 4000,
+                trial_duration: 2500,
                 post_trial_gap: 0
             })
 
@@ -179,15 +202,130 @@
                 choices: ['template-1.jpg', 'template-2.jpg', 'template-3.jpg'],
                 button_html: x => makeButtons(),
                 trial_duration: 3000,
-                data: { attentionTrial: true },
+                data: {
+                    SbjID: sbjID,
+                    Trial: -1,
+                    CorrRes: 2,
+                    TestTrial: false,
+                    Task: task,
+                    AttCheck: true
+                },
                 on_finish: function (data) {
-                    data.success = data.response == null
-                    attentionFails += data.success ? 0 : 1
-                    if (attentionFails > maxAttentionFails && source == 'prolific') {
-                        // Knock out prolific participants
+                    data.Corr = data.CorrRes == data.response
+                    attentionFails += data.Corr ? 0 : 1
+                    if (attentionFails > maxAttentionFails) {
+                        // Knock out participants
                         knockedOut = true
                         jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
-                        //window.location = "https://andrexia.com"
+                    }
+                    data.KnockedOut = knockedOut
+                    data.TimedOut = timedOut
+                    data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                    data.ExpTime = data.TimeSinceStart + data.OrigTime
+                    expTime = data.ExpTime
+                    if (data.ExpTime > 60 * timeoutMin) {
+                        timedOut = true
+                        data.TimedOut = true
+                        jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                    }
+                }
+            })
+        } else if (doAttentionCheck && trial.Trial == 25) {
+            timeline.push(fix)
+
+            timeline.push({
+                type: jsPsychHtmlKeyboardResponse,
+                stimulus: `
+                    <img src="./stimuli/attentionCheck2a.jpg" style="position: absolute; left: ${img1Left}px; top: ${img1Top}px">
+                    <img src="./stimuli/attentionCheck2b.jpg" style="position: absolute; left: ${img2Left}px; top: ${img2Top}px">
+                    <img src="./stimuli/attentionCheck2c.jpg" style="position: absolute; left: ${img3Left}px; top: ${img3Top}px">
+                `,
+                choices: ['NO_KEYS'],
+                trial_duration: 2500,
+                post_trial_gap: 0
+            })
+
+            timeline.push({
+                type: jsPsychHtmlButtonResponse,
+                stimulus: `<h2 style="position: relative; top: -20vh;">Which one was different?</h1>`,
+                choices: ['template-1.jpg', 'template-2.jpg', 'template-3.jpg'],
+                button_html: x => makeButtons(),
+                trial_duration: 3000,
+                data: {
+                    SbjID: sbjID,
+                    Trial: -1,
+                    CorrRes: 0,
+                    TestTrial: false,
+                    Task: task,
+                    AttCheck: true
+                },
+                on_finish: function (data) {
+                    data.Corr = data.CorrRes == data.response
+                    attentionFails += data.Corr ? 0 : 1
+                    if (attentionFails > maxAttentionFails) {
+                        // Knock out participants
+                        knockedOut = true
+                        jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                    }
+
+                    data.KnockedOut = knockedOut
+                    data.TimedOut = timedOut
+                    data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                    data.ExpTime = data.TimeSinceStart + data.OrigTime
+                    expTime = data.ExpTime
+                    if (data.ExpTime > 60 * timeoutMin) {
+                        timedOut = true
+                        data.TimedOut = true
+                        jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                    }
+                }
+            })
+        } else if (doAttentionCheck && trial.Trial == 35) {
+            timeline.push(fix)
+
+            timeline.push({
+                type: jsPsychHtmlKeyboardResponse,
+                stimulus: `
+                    <img src="./stimuli/attentionCheck3a.jpg" style="position: absolute; left: ${img1Left}px; top: ${img1Top}px">
+                    <img src="./stimuli/attentionCheck3b.jpg" style="position: absolute; left: ${img2Left}px; top: ${img2Top}px">
+                    <img src="./stimuli/attentionCheck3c.jpg" style="position: absolute; left: ${img3Left}px; top: ${img3Top}px">
+                `,
+                choices: ['NO_KEYS'],
+                trial_duration: 2500,
+                post_trial_gap: 0
+            })
+
+            timeline.push({
+                type: jsPsychHtmlButtonResponse,
+                stimulus: `<h2 style="position: relative; top: -20vh;">Which one was different?</h1>`,
+                choices: ['template-1.jpg', 'template-2.jpg', 'template-3.jpg'],
+                button_html: x => makeButtons(),
+                trial_duration: 3000,
+                data: {
+                    SbjID: sbjID,
+                    Trial: -1,
+                    CorrRes: 2,
+                    TestTrial: false,
+                    Task: task,
+                    AttCheck: true
+                },
+                on_finish: function (data) {
+                    data.Corr = data.CorrRes == data.response
+                    attentionFails += data.Corr ? 0 : 1
+                    if (attentionFails > maxAttentionFails) {
+                        // Knock out participants
+                        knockedOut = true
+                        jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
+                    }
+                    data.KnockedOut = knockedOut
+                    data.TimedOut = timedOut
+                    data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                    data.ExpTime = data.TimeSinceStart + data.OrigTime
+                    expTime = data.ExpTime
+                    if (data.ExpTime > 60 * timeoutMin) {
+                        timedOut = true
+                        data.TimedOut = true
+                        jsPsych.endExperiment('The experiment was ended due to taking too long.')
                     }
                 }
             })
@@ -215,13 +353,24 @@
             button_html: x => makeButtons(),
             data: {
                 SbjID: sbjID,
-                TrialN: trial.Trial,
+                Trial: trial.Trial,
                 CorrRes: trial.CorrRes - 1,
-                TestTrial: true
+                TestTrial: true,
+                Task: task
             },
             on_finish: function (data) {
-                data.Correct = data.CorrRes == data.response
+                data.Corr = data.CorrRes == data.response
                 data.AttentionFails = attentionFails
+                data.KnockedOut = knockedOut
+                data.TimedOut = timedOut
+                data.TimeSinceStart = (Date.now() - data.StartTime) / 1000
+                data.ExpTime = data.TimeSinceStart + data.OrigTime
+                expTime = data.ExpTime
+                if (data.ExpTime > 60 * timeoutMin) {
+                    timedOut = true
+                    data.TimedOut = true
+                    jsPsych.endExperiment('The experiment was ended due to taking too long.')
+                }
             }
         })
 
@@ -229,7 +378,7 @@
             timeline.push({
                 type: jsPsychHtmlKeyboardResponse,
                 stimulus: function () {
-                    if (jsPsych.data.get().last(1).values()[0].Correct) {
+                    if (jsPsych.data.get().last(1).values()[0].Corr) {
                         return "<h3>Correct!</h3>"
                     } else {
                         return "<h3>Incorrect.</h3>"
