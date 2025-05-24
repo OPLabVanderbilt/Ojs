@@ -2,7 +2,7 @@ let chainLink = ''
 let maxAttentionFails = 10000
 let doAttentionChecks = false
 const failLink = ''
-const timeoutLink = 'https://andrexia.com/timeout'
+const timeoutLink = ''
 const timeoutMin = 1000
 
 let knockedOut = false
@@ -318,8 +318,8 @@ for (let trial of trials.slice(18)) {
             on_timeline_finish: function () {
                 fail = keys.includes(jsPsych.data.get().last(1).values()[0].response)
                 attentionFails += fail ? 1 : 0
-                if (attentionFails > maxAttentionFails && source == 'prolific') {
-                    // Knock out prolific participants
+                if (attentionFails > maxAttentionFails) {
+                    // Knock out participants
                     knockedOut = true
                     data.KnockedOut = true
                     data.TimedOut = false

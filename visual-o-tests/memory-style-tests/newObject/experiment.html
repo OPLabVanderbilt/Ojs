@@ -270,8 +270,8 @@
                         data.CorrRes = 3,
                         data.Corr = data.response === data.CorrRes,
                         attentionFails += data.Corr ? 0 : 1
-                        if (attentionFails > maxAttentionFails && source == 'prolific') {
-                            // Knock out prolific participants
+                        if (attentionFails > maxAttentionFails) {
+                            // Knock out participants
                             knockedOut = true
                             jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
                         }
@@ -302,8 +302,8 @@
                         data.CorrRes = 1,
                         data.Corr = data.response === data.CorrRes,
                         attentionFails += data.Corr ? 0 : 1
-                        if (attentionFails > maxAttentionFails && source == 'prolific') {
-                            // Knock out prolific participants
+                        if (attentionFails > maxAttentionFails) {
+                            // Knock out participants
                             knockedOut = true
                             jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
                         }

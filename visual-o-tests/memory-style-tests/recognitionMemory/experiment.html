@@ -209,7 +209,6 @@ let maxAttentionFails = 100
             choices: [`./stimuli/attentionCheck1a.png`, `./stimuli/attentionCheck1b.png`,
                       `./stimuli/attentionCheck1c.png`],
             button_html: '<input type="image" src="%choice%"/>',
-            css_classes: ['trial'],
             on_finish: function (data) {
                 data.TestTrial = false,
                 data.Task = 'recMem',
@@ -219,8 +218,8 @@ let maxAttentionFails = 100
                 data.Corr = data.response === data.CorrRes,
                 attentionFails += data.Corr ? 0 : 1
                 data.AttentionFails = attentionFails
-                if (attentionFails > maxAttentionFails && source == 'prolific') {
-                    // Knock out prolific participants
+                if (attentionFails > maxAttentionFails) {
+                    // Knock out participants
                     knockedOut = true
                     jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
                 }
@@ -245,7 +244,6 @@ let maxAttentionFails = 100
             choices: [`./stimuli/attentionCheck2a.png`, `./stimuli/attentionCheck2b.png`,
                       `./stimuli/attentionCheck2c.png`],
             button_html: '<input type="image" src="%choice%"/>',
-            css_classes: ['trial'],
             on_finish: function (data) {
                 data.TestTrial = false,
                 data.Task = 'recMem',
@@ -255,8 +253,8 @@ let maxAttentionFails = 100
                 data.Corr = data.response === data.CorrRes,
                 attentionFails += data.Corr ? 0 : 1
                 data.AttentionFails = attentionFails
-                if (attentionFails > maxAttentionFails && source == 'prolific') {
-                    // Knock out prolific participants
+                if (attentionFails > maxAttentionFails) {
+                    // Knock out participants
                     knockedOut = true
                     jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
                 }
@@ -281,7 +279,6 @@ let maxAttentionFails = 100
             choices: [`./stimuli/attentionCheck3a.png`, `./stimuli/attentionCheck3b.png`,
                       `./stimuli/attentionCheck3c.png`],
             button_html: '<input type="image" src="%choice%"/>',
-            css_classes: ['trial'],
             on_finish: function (data) {
                 data.TestTrial = false,
                 data.Task = 'recMem',
@@ -291,8 +288,8 @@ let maxAttentionFails = 100
                 data.Corr = data.response === data.CorrRes,
                 attentionFails += data.Corr ? 0 : 1
                 data.AttentionFails = attentionFails
-                if (attentionFails > maxAttentionFails && source == 'prolific') {
-                    // Knock out prolific participants
+                if (attentionFails > maxAttentionFails) {
+                    // Knock out participants
                     knockedOut = true
                     jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
                 }
@@ -316,7 +313,6 @@ let maxAttentionFails = 100
             type: jsPsychImageButtonResponse,
             choices: trial.Choices,
             button_html: '<input type="image" src="%choice%"/>',
-            css_classes: ['trial'],
             on_finish: function (data) {
                 data.TestTrial = true,
                 data.Trial = trial.Trial,

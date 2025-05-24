@@ -205,11 +205,10 @@
                 on_finish: function (data) {
                     data.success = jsPsych.pluginAPI.compareKeys(data.response, 'q')
                     attentionFails += data.success ? 0 : 1
-                    if (attentionFails > maxAttentionFails && source == 'prolific') {
-                        // Knock out prolific participants
+                    if (attentionFails > maxAttentionFails) {
+                        // Knock out participants
                         knockedOut = true
                         jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
-                        //window.location = "https://andrexia.com"
                     }
                 }
             })
@@ -281,11 +280,10 @@
                 on_finish: function (data) {
                     data.success = jsPsych.pluginAPI.compareKeys(data.response, 'j')
                     attentionFails += data.success ? 0 : 1
-                    if (attentionFails > maxAttentionFails && source == 'prolific') {
-                        // Knock out prolific participants
+                    if (attentionFails > maxAttentionFails) {
+                        // Knock out participants
                         knockedOut = true
                         jsPsych.endExperiment('The experiment was ended due to missing too many attention checks.')
-                        //window.location = "https://andrexia.com"
                     }
                 }
             })
@@ -335,7 +333,6 @@
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `
   <p>You have finished this test!</p>
-  <p>Good job! This is 1 of 4 tests, don't worry later tests are shorter.</p>
   <p>Press any buttton to continue.</p>
   `
     });

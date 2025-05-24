@@ -3,8 +3,8 @@ const keys = ['f', 'j']
 let chainLink = ''
 let maxAttentionFails = 10000
 let doAttentionChecks = true
-const failLink = 'https://andrexia.com/fail'
-const timeoutLink = 'https://andrexia.com/timeout'
+const failLink = ''
+const timeoutLink = ''
 const timeoutMin = 10000
 
 let knockedOut = false
@@ -287,8 +287,8 @@ for (trial of trials) {
             data.attentionFails = attentionFails
             data.KnockedOut = knockedOut
             data.TimedOut = timedOut
-            if (attentionFails > maxAttentionFails && source == 'prolific') {
-                // Knock out prolific participants
+            if (attentionFails > maxAttentionFails) {
+                // Knock out participants
                 knockedOut = true
                 data.KnockedOut = true
                 data.TimedOut = false

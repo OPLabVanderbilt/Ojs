@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Learning Exemplars</title>
+    <script src="https://unpkg.com/jspsych@7.2.1"></script>
+    <link href="https://unpkg.com/jspsych@7.2.1/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/@jspsych/plugin-browser-check@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-button-response@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
+    <script src="./trials.js"></script>
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body></body>
+<script>
+let chainLink = '' // Change this to link to another experiment after this
+let maxAttentionFails = 100
+const doAttentionCheck = true
+const studyTime = 20000
+ITI = 500
+
+var jsPsych = initJsPsych({
+    on_finish: function () {
+        if (!chainLink == '') {
+            window.location = chainLink + "?id=" + sbjID + "&num=" + attentionFails + "&src=" + source + '&study=' + study
+        }
+    }
+});
+
+let study = jsPsych.data.getURLVariable('study')
+if (study === undefined) {
+    study = 'unknown'
+}
+
+// Make id
+let sbjID = jsPsych.data.getURLVariable('id');
+if (sbjID === undefined) {
+    sbjID = jsPsych.randomization.randomID(10)
+}
+
+// Get attention check counter
+let attentionFails = Number(jsPsych.data.getURLVariable('num'))
+    if (isNaN(attentionFails)) {
+        attentionFails = 0
+    }
+
+// Get source of participant
+let source = jsPsych.data.getURLVariable('src')
+if (source === undefined) {
+    source = 'unknown'
+}
+
+// Timeline
+var timeline = [];
+
+timeline.push({
+    type: jsPsychBrowserCheck,
+    inclusion_function: (data) => {
+        return !data.mobile
+    },
+    exclusion_message: (data) => {
+        return `
+    <p>You must use a desktop/laptop computer to participate in this 
+    experiment.</p>
+    <p>Please restart the experiment on a desktop/laptop computer.</p>
+`;
+    }
+})
+
+// Enter full screen
+timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: true
+})
+
+// Build images to preload
+let images = []
+
+for (trial of trials) {
+    images.push(`./stimuli/${trial.Trial}a.png`)
+    images.push(`./stimuli/${trial.Trial}b.png`)
+    images.push(`./stimuli/${trial.Trial}c.png`)
+}
+
+images.push(['./stimuli/attCheck1a.png',
+             './stimuli/attCheck1b.png',
+             './stimuli/attCheck1c.png',
+             './stimuli/diffview_instruct.jpg',
+             './stimuli/Ziggerins_study1.jpg'])
+
+// Preload
+timeline.push({
+    type: jsPsychPreload,
+    auto_preload: true,
+    images: images
+})
+
+// Instructions 1
+timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+    <p>In this task, you will learn to recognize six target objects.</p>
+    <p>First, you will study the six target objects. Then, there will be a test phase.</p>
+    `,
+    choices: ['Click here to continue']
+})
+
+// Instructions 2
+timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+    <p>In each test trial you will see three objects: ONE of the target objects + TWO distractor objects.</p>
+    <p>There will always be one of the six target objects present.</p>
+    <p>Sometimes the objects might appear in visual noise.</p>
+    <p><b>Your task will be to select the target object from among the distractors.</b></p>
+    `,
+    choices: ['Click here to continue']
+})
+
+// loop
+for (let trial of trials) {
+
+    // study
+    if (trial.Trial == 1 || trial.Trial == 7) {
+
+        let prompt = studyTime ?
+            `</br>These six objects are your TARGETS. Study them for ${studyTime / 1000} seconds.` :
+            `</br>These six objects are your TARGETS. Study them for as long as you like</br>
+            Press the spacebar when you are ready to start.`
+
+        timeline.push({
+            type: jsPsychImageKeyboardResponse,
+            stimulus: './stimuli/Ziggerins_study1.jpg',
+            choices: studyTime ? 'NO_KEYS' : [' '],
+            prompt: prompt,
+            trial_duration: studyTime,
+            post_trial_gap: ITI
+        })
+
+    } else if (trial.Trial == 25) {
+        timeline.push({
+            type: jsPsychImageKeyboardResponse,
+            stimulus: './stimuli/diffview_instruct.jpg',
+            choices: [' '],
+            post_trial_gap: ITI
+        })
+
+        let prompt2 = studyTime ?
+            `</br>Study the targets for ${studyTime / 1000} seconds.</br>
+            In the next block, the targets will be presented in a <b><u>different viewpoint.</u></b>` :
+            `</br>Study the targets for as long as you like.</br>
+            In the next block, the targets will be presented in a <b><u>different viewpoint.</u></b></br>
+            Press the spacebar when you are ready to start.`
+
+        timeline.push({
+            type: jsPsychImageKeyboardResponse,
+        
+            stimulus: './stimuli/Ziggerins_study1.jpg',
+            choices: studyTime ? "NO_KEYS" : [' '],
+            prompt: prompt2,
+            trial_duration: studyTime,
+            post_trial_gap: ITI
+        })
+
+    // attention check
+    } else if (doAttentionCheck && trial.Trial == 16) {
+    
+        timeline.push({
+            type: jsPsychHtmlButtonResponse,
+            stimulus: '',
+            choices: [`./stimuli/attCheck1a.png`, `./stimuli/attCheck1b.png`,
+                      `./stimuli/attCheck1c.png`],
+            button_html: '<input type="image" src="%choice%"/>',
+            prompt: '<br><br>Select the target.',
+            post_trial_gap: ITI,
+            on_finish: function (data) {
+                data.TestTrial = false,
+                data.attCheck = true,
+                data.Task = 'learnExem',
+                data.SbjID = sbjID,
+                data.CorrRes = 0,
+                data.Corr = data.response === data.CorrRes
+            }
+        })  
+    }
+
+    // trial
+    timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: '',
+        prompt: '<br><br>Select the target.',
+        choices: trial.Choices,
+        button_html: '<input type="image" src="%choice%"/>',
+        post_trial_gap: ITI,
+        on_finish: function (data) {
+            data.TestTrial = true,
+            data.Task = 'learnExem',
+            data.Trial = trial.Trial,
+            data.SbjID = sbjID,
+            data.CorrRes = trial.CorrRes,
+            data.Corr = data.response === data.CorrRes
+        }
+    })
+}
+
+// Exit fullscreen
+timeline.push({
+    type: jsPsychFullscreen,
+    fullscreen_mode: false
+})
+
+// End card
+timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+<p>You have completed this test, good job!</p>
+`,
+    choices: ['Click here to continue'],
+})
+
+// Run
+jsPsych.run(timeline)
+</script>
+
+</html>
